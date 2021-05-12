@@ -141,7 +141,8 @@ class NavService extends GetxService {
       if (screen != null) {
         return screen.createWidget(args);
       } else {
-        return Center(child: Text('Error! No route for $currentUrl (${app.urlMap.keys})'));
+        print('No route for $currentUrl (${app.urlMap.keys}), returning existing');
+        return activeScreen.value.createWidget(args);
       }
     };
     return GetPageRoute(
