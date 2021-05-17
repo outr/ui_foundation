@@ -66,6 +66,10 @@ class PageTwo extends StatelessWidget {
                 onPressed: () => application.push(screen3, args: {'test': 'Hello, World'}),
                 child: Text('Go to Page 3'),
               ),
+              ElevatedButton(
+                onPressed: () => application.changeTheme(context, ThemeData(primarySwatch: Colors.red)),
+                child: Text('Change Theme'),
+              ),
             ]
         )
     );

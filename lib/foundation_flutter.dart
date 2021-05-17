@@ -26,9 +26,9 @@ class Nav {
   Nav(this.label, this.icon);
 }
 
-class Application extends StatelessWidget {
+class Application extends StatefulWidget {
   final String title;
-  final ThemeData theme;
+  final ThemeData _theme;
   final List<Screen> screens;
   final List<Screen> navScreens;
   final Map<String, Screen> urlMap;
@@ -41,12 +41,13 @@ class Application extends StatelessWidget {
 
   Application({
     required this.title,
-    required this.theme,
+    required ThemeData theme,
     required this.screens,
     Transition? tabTransition,
     Transition? internalTransition,
     Widget Function(String)? createHomeWidget,
   }) :
+        _theme = theme,
         navScreens = screens.where((s) => s.nav != null).toList(),
         urlMap = Map.fromIterable(screens, key: (s) => '/${s.key}', value: (s) => s),
         initialURL = screens[0].url(),
@@ -58,15 +59,39 @@ class Application extends StatelessWidget {
 
   Future<dynamic>? replace(Screen screen, {Map<String, String>? args}) => navService.goToReplacementScreen(screen, args ?? Map<String, String>());
 
-  Widget build(BuildContext context) {
+  @override
+  State createState() {
     navService = NavService(this);
+    return ApplicationState(_theme);
+  }
 
+  void changeTheme(BuildContext context, ThemeData theme) {
+    final ApplicationState state = Application.of(context)!;
+    state.setState(() {
+      state.theme = theme;
+    });
+  }
+
+  ThemeData currentTheme(BuildContext context) => Application.of(context)!.theme;
+
+  static ApplicationState? of(BuildContext context, {bool root = false}) => root
+      ? context.findRootAncestorStateOfType<ApplicationState>()
+      : context.findAncestorStateOfType<ApplicationState>();
+}
+
+class ApplicationState extends State<Application> {
+  ThemeData theme;
+
+  ApplicationState(this.theme);
+
+  @override
+  Widget build(BuildContext context) {
     return GetMaterialApp(
-        title: title,
+        title: widget.title,
         theme: theme,
         debugShowCheckedModeBanner: false,
-        initialBinding: BindingsBuilder.put(() => navService),
-        home: createHomeWidget(initialURL)
+        initialBinding: BindingsBuilder.put(() => widget.navService),
+        home: widget.createHomeWidget(widget.initialURL)
     );
   }
 }
