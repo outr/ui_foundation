@@ -26,6 +26,39 @@ class Nav {
   Nav(this.label, this.icon);
 }
 
+abstract class AbstractTheme {
+  ThemeData data();
+}
+
+class ThemedApplication<T extends AbstractTheme> extends Application {
+  final Rx<T> rxTheme;
+  T get theme => rxTheme.value;
+  set theme(T t) => rxTheme(t);
+
+  ThemedApplication({
+    required String title,
+    required T initialTheme,
+    required List<Screen> screens,
+    Transition? tabTransition,
+    Transition? internalTransition,
+    Widget Function(String)? createHomeWidget
+  }):
+    rxTheme = initialTheme.obs,
+    super(
+      title: title,
+      theme: initialTheme.data(),
+      screens: screens,
+      tabTransition: tabTransition,
+      internalTransition: internalTransition,
+      createHomeWidget: createHomeWidget
+    ) {
+    rxTheme.listen((t) {
+      changeTheme(Get.context!, t.data());
+      reload();
+    });
+  }
+}
+
 class Application extends StatefulWidget {
   final String title;
   final ThemeData _theme;
@@ -54,6 +87,8 @@ class Application extends StatefulWidget {
         this.tabTransition = tabTransition ?? Transition.fadeIn,
         this.internalTransition = internalTransition ?? Transition.rightToLeft,
         this.createHomeWidget = createHomeWidget ?? ((s) => Home(initialURL: s));
+
+  Future<dynamic>? reload() => navService.reloadScreen();
 
   Future<dynamic>? push(Screen screen, {Map<String, String>? args}) => navService.goToScreen(screen, args ?? Map<String, String>());
 
@@ -138,13 +173,17 @@ class NavService extends GetxService {
     }
   }
 
+  Future<dynamic>? reloadScreen() {
+    Get.off(() => activeScreen.value.createWidget({}), id: 1);
+  }
+
   Future<dynamic>? goToScreen(Screen screen, Map<String, String> args) {
     if (screen.nav != null) {
       return Get.toNamed(screen.url(), id: 1, arguments: args);
     } else if (screen.parent != null) {
       return Get.toNamed(screen.url(), id: 1, arguments: args);
     } else {
-      return Get.to(() => screen.createWidget(args), transition: app.internalTransition, arguments: args);
+      return Get.to(() => screen.createWidget(args), id: 1, transition: app.internalTransition, arguments: args);
     }
   }
 
@@ -154,7 +193,7 @@ class NavService extends GetxService {
     } else if (screen.parent != null) {
       return Get.offNamed(screen.url(), id: 1, arguments: args);
     } else {
-      return Get.off(screen.createWidget, transition: app.internalTransition, arguments: args);
+      return Get.off(() => screen.createWidget(args), id: 1, transition: app.internalTransition, arguments: args);
     }
   }
 
