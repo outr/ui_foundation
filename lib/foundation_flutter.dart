@@ -28,6 +28,7 @@ class Nav {
 
 abstract class AbstractTheme {
   ThemeData data();
+  ThemeMode mode();
 }
 
 class ThemedApplication<T extends AbstractTheme> extends Application {
@@ -52,8 +53,12 @@ class ThemedApplication<T extends AbstractTheme> extends Application {
       internalTransition: internalTransition,
       createHomeWidget: createHomeWidget
     ) {
+    Get.changeTheme(initialTheme.data());
+    Get.changeThemeMode(initialTheme.mode());
     rxTheme.listen((t) {
       changeTheme(Get.context!, t.data());
+      Get.changeTheme(t.data());
+      Get.changeThemeMode(t.mode());
       reload();
     });
   }

@@ -152,6 +152,9 @@ class MyTheme extends AbstractTheme {
     return td;
   }
 
+  @override
+  ThemeMode mode() => isDark ? ThemeMode.dark : ThemeMode.light;
+
   static final MyTheme light = new MyTheme(bg1: Colors.white, accent1: Colors.blueAccent, isDark: false);
   static final MyTheme dark = new MyTheme(bg1: Colors.black26, accent1: Colors.greenAccent, isDark: false);
 }
