@@ -2,26 +2,26 @@ import 'package:flutter/material.dart';
 
 import 'package:foundation_flutter/foundation_flutter.dart';
 
-final Screen screen0 = Screen(key: '0', createWidget: (args) {
+final Screen screen0 = Screen(key: '0', create: (args) {
   return ElevatedButton(
     onPressed: () => application.push(screen1),
     child: Text('Begin'),
   );
 });
 
-final Screen screen1 = Screen(key: '1', nav: Nav('Page 1', Icons.account_circle), createWidget: (args) {
+final Screen screen1 = Screen(key: '1', nav: Nav('Page 1', Icons.account_circle), create: (args) {
   return PageOne();
 });
 
-final Screen screen2 = Screen(key: '2', nav: Nav('Page 2', Icons.settings), createWidget: (args) {
+final Screen screen2 = Screen(key: '2', nav: Nav('Page 2', Icons.settings), create: (args) {
   return PageTwo();
 });
 
-final Screen screen3 = Screen(key: '3', nav: Nav('Page 3', Icons.nature), createWidget: (args) {
+final Screen screen3 = Screen(key: '3', nav: Nav('Page 3', Icons.nature), create: (args) {
   return PageThree(args: args);
 });
 
-final Screen details = Screen(key: 'details', parent: screen2, createWidget: (params) {
+final Screen details = Screen(key: 'details', parent: screen2, create: (params) {
   return DetailsPage();
 });
 
@@ -35,17 +35,31 @@ void main() {
   runApp(application);
 }
 
-class PageOne extends StatelessWidget {
-  const PageOne({Key? key}) : super(key: key);
+class PageOne extends StatefulWidget {
+  @override
+  State createState() {
+    print('PageOne createState!');
+    return PageOneState();
+  }
+}
+
+class PageOneState extends State<PageOne> {
+  int _counter = 0;
 
   @override
-  Widget build(BuildContext context) {
-    return Container(
-      color: Colors.white,
-      alignment: Alignment.center,
-      child: Text('One'),
-    );
-  }
+  Widget build(BuildContext context) => Container(
+    color: Colors.white,
+    child: Column(
+      children: [
+        Text('Count: $_counter'),
+        ElevatedButton(onPressed: increment, child: Text("Increment"))
+      ],
+    )
+  );
+
+  void increment() => setState(() {
+    _counter++;
+  });
 }
 
 class PageTwo extends StatelessWidget {

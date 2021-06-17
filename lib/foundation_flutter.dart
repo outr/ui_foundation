@@ -7,16 +7,40 @@ class Screen {
   final String key;
   final Nav? nav;
   final Screen? parent;
-  final Widget Function(Map<String, String>) createWidget;
+  final Widget Function(Map<String, String>) create;
+  final bool reuse;
+
+  final Map<String, Widget> cache = {};
 
   Screen({
     required this.key,
     this.nav,
     this.parent,
-    required this.createWidget
-  });
+    required this.create,
+    bool? reuse
+  }):
+    this.reuse = reuse ?? true;
 
   String url() => '/$key';
+
+  Widget get(Map<String, String> args) {
+    String argsString = args.toString();
+    print('Get $args, Reuse: $reuse, Contains: ${cache.containsKey(argsString)}, Length: ${cache.length}');
+    if (reuse && cache.containsKey(argsString)) {
+      print('Reusing existing! ${url()} - $argsString');
+      return cache[argsString]!;
+    } else {
+      print('Creating new instance! ${url()} - $argsString');
+      Widget w = create(args);
+      if (reuse) {
+        cache[argsString] = w;
+      }
+      return w;
+    }
+  }
+
+  void invalidate(Map<String, String> args) => cache.remove(args);
+  void invalidateAll() => cache.clear();
 }
 
 class Nav {
@@ -181,7 +205,7 @@ class NavService extends GetxService {
   }
 
   Future<dynamic>? reloadScreen() {
-    Get.off(() => activeScreen.value.createWidget({}), id: 1);
+    Get.off(() => activeScreen.value.get({}), id: 1);
   }
 
   Future<dynamic>? reloadAll() {
@@ -198,7 +222,7 @@ class NavService extends GetxService {
     } else if (screen.parent != null) {
       return Get.toNamed(screen.url(), id: 1, arguments: args);
     } else {
-      return Get.to(() => screen.createWidget(args), id: 1, transition: app.internalTransition, arguments: args);
+      return Get.to(() => screen.get(args), id: 1, transition: app.internalTransition, arguments: args);
     }
   }
 
@@ -208,7 +232,7 @@ class NavService extends GetxService {
     } else if (screen.parent != null) {
       return Get.offNamed(screen.url(), id: 1, arguments: args);
     } else {
-      return Get.off(() => screen.createWidget(args), id: 1, transition: app.internalTransition, arguments: args);
+      return Get.off(() => screen.get(args), id: 1, transition: app.internalTransition, arguments: args);
     }
   }
 
@@ -218,10 +242,10 @@ class NavService extends GetxService {
     final screen = app.urlMap[currentUrl];
     final GetPageBuilder page = () {
       if (screen != null) {
-        return screen.createWidget(args);
+        return screen.get(args);
       } else {
         print('No route for $currentUrl (${app.urlMap.keys}), returning existing');
-        return activeScreen.value.createWidget(args);
+        return activeScreen.value.get(args);
       }
     };
     return GetPageRoute(
