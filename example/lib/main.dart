@@ -50,6 +50,7 @@ class PageOneState extends State<PageOne> {
 
   @override
   Widget build(BuildContext context) => Container(
+      width: double.infinity,
     color: Colors.white,
     child: Column(
       children: [

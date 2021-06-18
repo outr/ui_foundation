@@ -280,15 +280,6 @@ class Application<T extends AbstractTheme> extends StatefulWidget with HistoryLi
     return history.back();
   }
 
-  Widget createTransition(Widget child, Animation<double> animation) {
-    return ScaleTransition(child: child, scale: animation);
-
-    // return FadeTransition(opacity: animation, child: child);
-
-    // final offset = Tween<Offset>(begin: Offset.zero, end: Offset(0.0, 1.0)).animate(animation);
-    // return SlideTransition(position: offset, child: child);
-  }
-
   @override
   void apply(HistoryAction action, HistoryState previous, HistoryState current) {
     instance.setState(() {});
@@ -344,7 +335,33 @@ class ApplicationState extends State<Application> {
       children: children
     );
     return AnimatedSwitcher(
-      transitionBuilder: widget.createTransition,
+      transitionBuilder: (Widget child, Animation<double> animation) {
+        final inAnimation = Tween<Offset>(begin: Offset(1.0, 0.0), end: Offset(0.0, 0.0))
+            .animate(animation);
+        final outAnimation = Tween<Offset>(begin: Offset(-1.0, 0.0), end: Offset(0.0, 0.0))
+            .animate(animation);
+        if (child.key == stack.key) {
+          return ClipRect(
+            child: SlideTransition(
+              position: inAnimation,
+              child: Padding(
+                padding: const EdgeInsets.all(8.0),
+                child: child,
+              ),
+            ),
+          );
+        } else {
+          return ClipRect(
+            child: SlideTransition(
+              position: outAnimation,
+              child: Padding(
+                padding: const EdgeInsets.all(8.0),
+                child: child,
+              ),
+            ),
+          );
+        }
+      },
       duration: const Duration(milliseconds: 500),
       child: stack
     );
