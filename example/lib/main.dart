@@ -1,31 +1,33 @@
 import 'package:flutter/material.dart';
 
-import 'package:foundation_flutter/foundation_flutter.dart';
+import 'package:foundation_flutter/foundation.dart';
 
-final Screen screen0 = Screen(key: '0', create: (args) {
+final NavBar navBar = NavBar();
+
+final Screen screen0 = Screen(create: (args) {
   return ElevatedButton(
     onPressed: () => application.push(screen1),
     child: Text('Begin'),
   );
-});
+}, cacheManager: ScreenCacheManager.always);
 
-final Screen screen1 = Screen(key: '1', nav: Nav('Page 1', Icons.account_circle), create: (args) {
+final Screen screen1 = Screen(nav: Nav('Page 1', Icons.account_circle, navBar), create: (args) {
   return PageOne();
-});
+}, cacheManager: ScreenCacheManager.always);
 
-final Screen screen2 = Screen(key: '2', nav: Nav('Page 2', Icons.settings), create: (args) {
+final Screen screen2 = Screen(nav: Nav('Page 2', Icons.settings, navBar), create: (args) {
   return PageTwo();
-});
+}, cacheManager: ScreenCacheManager.always);
 
-final Screen screen3 = Screen(key: '3', nav: Nav('Page 3', Icons.nature), create: (args) {
+final Screen screen3 = Screen(nav: Nav('Page 3', Icons.nature, navBar), create: (args) {
   return PageThree(args: args);
-});
+}, cacheManager: ScreenCacheManager.always);
 
-final Screen details = Screen(key: 'details', parent: screen2, create: (params) {
+final Screen details = Screen(parent: screen2, create: (params) {
   return DetailsPage();
-});
+}, cacheManager: ScreenCacheManager.always);
 
-final ThemedApplication<MyTheme> application = ThemedApplication<MyTheme>(
+final Application<MyTheme> application = Application<MyTheme>(
     title: 'My Application Test',
     initialTheme: MyTheme.light,
     screens: [screen0, screen1, screen2, details, screen3]
@@ -78,7 +80,7 @@ class PageTwo extends StatelessWidget {
                 style: application.theme.specialButton,
               ),
               ElevatedButton(
-                onPressed: () => application.push(screen3, args: {'test': 'Hello, World'}),
+                onPressed: () => application.push(screen3, args: Arguments({'test': 'Hello, World'})),
                 child: Text('Go to Page 3'),
               ),
               ElevatedButton(
@@ -115,7 +117,7 @@ class DetailsPage extends StatelessWidget {
 }
 
 class PageThree extends StatelessWidget {
-  final Map<String, String> args;
+  final Arguments args;
 
   const PageThree({Key? key, required this.args}) : super(key: key);
 
