@@ -280,6 +280,15 @@ class Application<T extends AbstractTheme> extends StatefulWidget with HistoryLi
     return history.back();
   }
 
+  Widget createTransition(Widget child, Animation<double> animation) {
+    return ScaleTransition(child: child, scale: animation);
+
+    // return FadeTransition(opacity: animation, child: child);
+
+    // final offset = Tween<Offset>(begin: Offset.zero, end: Offset(0.0, 1.0)).animate(animation);
+    // return SlideTransition(position: offset, child: child);
+  }
+
   @override
   void apply(HistoryAction action, HistoryState previous, HistoryState current) {
     instance.setState(() {});
@@ -298,7 +307,7 @@ class Home extends StatelessWidget {
   @override
   Widget build(BuildContext context) => Scaffold(
     body: SafeArea(
-      child: Application.instance.createStack()
+      child: Application.instance.createMain()
     ),
     bottomNavigationBar: Application.instance.bottomNavBar()
   );
@@ -323,15 +332,21 @@ class ApplicationState extends State<Application> {
     return widget.back().then((success) => !success);
   }
 
-  IndexedStack createStack() {
+  Widget createMain() {
     final Widget current = widget.screen.get(widget.args);
     if (!children.contains(current)) {
       children.add(current);
     }
     final int index = children.indexOf(current);
-    return IndexedStack(
+    final IndexedStack stack = IndexedStack(
+      key: ValueKey<int>(index),
       index: index,
       children: children
+    );
+    return AnimatedSwitcher(
+      transitionBuilder: widget.createTransition,
+      duration: const Duration(milliseconds: 500),
+      child: stack
     );
   }
 
