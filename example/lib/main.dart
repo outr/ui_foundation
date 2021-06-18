@@ -106,7 +106,7 @@ class DetailsPage extends StatelessWidget {
             children: [
               Text('jk, i\'m not evil, you can click me'),
               ElevatedButton(
-                onPressed: () => Navigator.pop(context),
+                onPressed: () => application.back(),
                 child: Text('Click me!'),
               ),
             ]

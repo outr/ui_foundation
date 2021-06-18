@@ -13,40 +13,97 @@ class Nav {
   Nav(this.label, this.icon, this.bar);
 }
 
-class Screen {
+class Screen extends ScreenListener {
   final Nav? nav;
   final Screen? parent;
   final Widget Function(Arguments) create;
   final ScreenCacheManager? cacheManager;
 
   final Map<Arguments, Widget> _cacheMap = {};
+  final List<ScreenListener> _listeners = [];
 
   Screen({
     required this.create,
     this.nav,
     this.parent,
     this.cacheManager
-  });
+  }) {
+    listen(this);
+  }
 
   Widget get(Arguments args) {
     final Widget? cached = _cacheMap[args];
     if (cached != null) {
+      _invokeListeners(ScreenState.active, cached, args);
       return cached;
     } else {
       final Widget w = create(args);
-      cacheManager?.cache(args, w, _cacheMap);
+      _invokeListeners(ScreenState.create, w, args);
+      _invokeListeners(ScreenState.active, w, args);
+      cacheManager?.cache(this, w, args);
       return w;
     }
   }
 
-  // TODO: ScreenState and listeners for init, active, inactive, dispose
-  // TODO: remove from IndexedStack (ApplicationState.children) for each item removed from cache
-
   Nav? getNav() => nav ?? parent?.getNav();
+
+  Screen? getNavScreen() {
+    if (nav != null) {
+      return this;
+    } else {
+      return parent?.getNavScreen();
+    }
+  }
 
   bool hasNavBar(NavBar bar) => nav?.bar == bar;
 
-  void clearCache() => _cacheMap.clear();
+  void addToCache(Widget widget, Arguments args) {
+    final Widget? existing = _cacheMap[args];
+    _cacheMap[args] = widget;
+    if (existing != null) {
+      _invokeListeners(ScreenState.dispose, existing, args);
+    }
+  }
+
+  void removeFromCache(Widget widget, Arguments args) {
+    final Widget? removed = _cacheMap.remove(args);
+    if (removed != null) {
+      _invokeListeners(ScreenState.dispose, removed, args);
+    }
+  }
+
+  void clearCache() {
+    _cacheMap.forEach((args, widget) => removeFromCache(widget, args));
+  }
+
+  void listen(ScreenListener listener) {
+    _listeners.add(listener);
+  }
+
+  void remove(ScreenListener listener) {
+    _listeners.remove(listener);
+  }
+
+  void _invokeListeners(ScreenState state, Widget widget, Arguments args) {
+    _listeners.forEach((listener) => listener.apply(this, state, widget, args));
+  }
+
+  @override
+  void apply(Screen screen, ScreenState state, Widget widget, Arguments args) {
+    if (state == ScreenState.dispose) {
+      Application.instance.children.remove(widget);
+    }
+  }
+}
+
+abstract class ScreenListener {
+  void apply(Screen screen, ScreenState state, Widget widget, Arguments args);
+}
+
+enum ScreenState {
+  create,
+  active,
+  dispose
 }
 
 class HistoryManager {
@@ -145,7 +202,7 @@ class Arguments {
 }
 
 abstract class ScreenCacheManager {
-  void cache(Arguments args, Widget widget, Map<Arguments, Widget> cacheMap);
+  void cache(Screen screen, Widget widget, Arguments args);
 
   static final ScreenCacheManager never = _NeverCacheManager();
   static final ScreenCacheManager always = _AlwaysCacheManager();
@@ -153,19 +210,19 @@ abstract class ScreenCacheManager {
 }
 
 class _NeverCacheManager extends ScreenCacheManager {
-  void cache(Arguments args, Widget widget, Map<Arguments, Widget> cacheMap) {}
+  void cache(Screen screen, Widget widget, Arguments args) {}
 }
 
 class _AlwaysCacheManager extends ScreenCacheManager {
-  void cache(Arguments args, Widget widget, Map<Arguments, Widget> cacheMap) {
-    cacheMap[args] = widget;
+  void cache(Screen screen, Widget widget, Arguments args) {
+    screen.addToCache(widget, args);
   }
 }
 
 class _OneCacheManager extends ScreenCacheManager {
-  void cache(Arguments args, Widget widget, Map<Arguments, Widget> cacheMap) {
-    cacheMap.clear();
-    cacheMap[args] = widget;
+  void cache(Screen screen, Widget widget, Arguments args) {
+    screen.clearCache();
+    screen.addToCache(widget, args);
   }
 }
 
@@ -176,29 +233,36 @@ abstract class AbstractTheme {
 
 class Application<T extends AbstractTheme> extends StatefulWidget with HistoryListener {
   final String title;
-  T _theme;
-  final List<Screen> screens;
+  final Widget Function() createHomeWidget;
 
+  final List<Screen> screens;
   final HistoryManager history;
 
+  T _theme;
+
   Screen get screen => history.current.screen;
+  Arguments get args => history.current.args;
 
   T get theme => _theme;
-  void set theme(T theme) {
+  set theme(T theme) {
     _theme = theme;
     instance.setState(() {});
   }
 
-  ApplicationState get instance => of(staticContext!)!;
+  static ApplicationState get instance => of(staticContext!)!;
+
+  // TODO: tabTransition and internalTransition
 
   Application({
     required this.title,
     required T initialTheme,
-    required this.screens
+    required this.screens,
+    Widget Function()? createHomeWidget,
   }):
     history = HistoryManager(HistoryState(screens.first, Arguments.empty)),
-    _theme = initialTheme {
-    history.listen(this);
+    _theme = initialTheme,
+    this.createHomeWidget = createHomeWidget ?? (() => Home()){
+      history.listen(this);
   }
 
   @override
@@ -230,6 +294,16 @@ class Application<T extends AbstractTheme> extends StatefulWidget with HistoryLi
       : context.findAncestorStateOfType<ApplicationState>();
 }
 
+class Home extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) => Scaffold(
+    body: SafeArea(
+      child: Application.instance.createStack()
+    ),
+    bottomNavigationBar: Application.instance.bottomNavBar()
+  );
+}
+
 class ApplicationState extends State<Application> {
   final List<Widget> children = [];
 
@@ -241,12 +315,7 @@ class ApplicationState extends State<Application> {
     debugShowCheckedModeBanner: false,
     home: WillPopScope(
       onWillPop: _willPop,
-      child: Scaffold(
-        body: SafeArea(
-          child: _createStack()
-        ),
-        bottomNavigationBar: _buildNavBar(),
-      )
+      child: widget.createHomeWidget()
     )
   );
 
@@ -254,8 +323,8 @@ class ApplicationState extends State<Application> {
     return widget.back().then((success) => !success);
   }
 
-  IndexedStack _createStack() {
-    final Widget current = widget.screen.get(Arguments.empty);
+  IndexedStack createStack() {
+    final Widget current = widget.screen.get(widget.args);
     if (!children.contains(current)) {
       children.add(current);
     }
@@ -266,12 +335,13 @@ class ApplicationState extends State<Application> {
     );
   }
 
-  Widget? _buildNavBar() {
+  Widget? bottomNavBar() {
     final Screen screen = widget.screen;
     final Nav? nav = screen.getNav();
     if (nav == null) {
       return null;
     } else {
+      final Screen navScreen = screen.getNavScreen()!;
       final NavBar bar = nav.bar;
       final List<Screen> screens = widget.screens.where((s) => s.hasNavBar(bar)).toList(growable: false);
       final List<BottomNavigationBarItem> items = screens.map((s) => BottomNavigationBarItem(
@@ -280,7 +350,7 @@ class ApplicationState extends State<Application> {
       )).toList(growable: false);
       return BottomNavigationBar(
         type: BottomNavigationBarType.fixed,
-        currentIndex: screens.indexOf(screen),
+        currentIndex: screens.indexOf(navScreen),
         onTap: (index) => widget.push(screens[index]),
         items: items
       );
