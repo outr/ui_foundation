@@ -14,6 +14,7 @@ class Nav {
 }
 
 class Screen extends ScreenListener {
+  final String name;
   final Nav? nav;
   final Screen? parent;
   final Widget Function(Arguments) create;
@@ -23,6 +24,7 @@ class Screen extends ScreenListener {
   final List<ScreenListener> _listeners = [];
 
   Screen({
+    required this.name,
     required this.create,
     this.nav,
     this.parent,
@@ -94,6 +96,9 @@ class Screen extends ScreenListener {
       Application.instance.children.remove(widget);
     }
   }
+
+  @override
+  String toString() => 'Screen($name)';
 }
 
 abstract class ScreenListener {
@@ -103,6 +108,7 @@ abstract class ScreenListener {
 enum ScreenState {
   create,
   active,
+  inactive,   // TODO: properly support
   dispose
 }
 
@@ -116,8 +122,6 @@ class HistoryManager {
   bool get isTop => _entries.length == 1;
 
   HistoryState get current => _entries.last;
-
-  // TODO: Use animatedswitcher to switch between
 
   Future<void> push(HistoryState state) {
     final HistoryState previous = current;
@@ -231,9 +235,11 @@ abstract class AbstractTheme {
   ThemeMode mode();
 }
 
-class Application<T extends AbstractTheme> extends StatefulWidget with HistoryListener {
+class Application<S, T extends AbstractTheme> extends StatefulWidget with HistoryListener {
+  final S state;
   final String title;
   final Widget Function() createHomeWidget;
+  final TransitionManager transitionManager;
 
   final List<Screen> screens;
   final HistoryManager history;
@@ -247,23 +253,25 @@ class Application<T extends AbstractTheme> extends StatefulWidget with HistoryLi
   set theme(T theme) {
     _theme = theme;
     instance.setState(() {});
+    reloadAll();
   }
 
   static ApplicationState get instance => of(staticContext!)!;
 
-  // TODO: tabTransition and internalTransition
-
   Application({
+    required this.state,
     required this.title,
     required T initialTheme,
     required this.screens,
     Widget Function()? createHomeWidget,
+    TransitionManager? transitionManager
   }):
     history = HistoryManager(HistoryState(screens.first, Arguments.empty)),
     _theme = initialTheme,
-    this.createHomeWidget = createHomeWidget ?? (() => Home()){
+    this.createHomeWidget = createHomeWidget ?? (() => Home()),
+    this.transitionManager = transitionManager ?? TransitionManager.standard {
       history.listen(this);
-  }
+    }
 
   @override
   State createState() => ApplicationState();
@@ -280,9 +288,46 @@ class Application<T extends AbstractTheme> extends StatefulWidget with HistoryLi
     return history.back();
   }
 
+  Widget createTransition(Screen? previous, Screen current, Direction? direction, Widget child, Animation<double> animation) {
+    return transitionManager.create(previous, current, direction, child, animation);
+  }
+
   @override
   void apply(HistoryAction action, HistoryState previous, HistoryState current) {
     instance.setState(() {});
+  }
+
+  void reloadAll() {
+    void rebuild(Element e) {
+      e.markNeedsBuild();
+      e.visitChildren(rebuild);
+    }
+    (staticContext as Element).visitChildren(rebuild);
+  }
+
+  Direction? direction(Screen? s1, Screen s2) {
+    if (s1 == null) {
+      return null;
+    } else {
+      if (s1 == s2) return null;
+      final Nav? n1 = s1.getNav();
+      final Nav? n2 = s2.getNav();
+      if (n1 != null && n2 != null && n1.bar == n2.bar) {
+        final NavBar bar = n1.bar;
+        final List<Screen> screens = this.screens.where((s) => s.hasNavBar(bar)).toList(growable: false);
+        final int i1 = screens.indexOf(s1.getNavScreen()!);
+        final int i2 = screens.indexOf(s2.getNavScreen()!);
+        if (i1 < i2) {
+          return Direction.forward;
+        } else if (i1 > i2) {
+          return Direction.back;
+        } else {
+          return null;
+        }
+      } else {
+        return null;
+      }
+    }
   }
 
   static final GlobalKey<NavigatorState> navKey = GlobalKey<NavigatorState>();
@@ -294,6 +339,51 @@ class Application<T extends AbstractTheme> extends StatefulWidget with HistoryLi
       : context.findAncestorStateOfType<ApplicationState>();
 }
 
+abstract class TransitionManager {
+  Widget create(Screen? previous, Screen current, Direction? direction, Widget child, Animation<double> animation);
+
+  static final TransitionManager standard = _StandardTransitionManager();
+}
+
+class _StandardTransitionManager extends TransitionManager {
+  @override
+  Widget create(Screen? previous, Screen current, Direction? direction, Widget child, Animation<double> animation) {
+    if (current.nav == null) {   // Child screens
+      return FadeTransition(opacity: animation, child: child);
+    } else {                    // Navigation screens
+      final inAnimation = Tween<Offset>(begin: Offset(1.0, 0.0), end: Offset(0.0, 0.0))
+          .animate(animation);
+      final outAnimation = Tween<Offset>(begin: Offset(-1.0, 0.0), end: Offset(0.0, 0.0))
+          .animate(animation);
+      // print('Transition: ${child.key} / ${stack.key}');
+      if (direction == Direction.forward) {
+        return ClipRect(
+          child: SlideTransition(
+            position: inAnimation,
+            child: Padding(
+              padding: const EdgeInsets.all(8.0),
+              child: child,
+            ),
+          ),
+        );
+      } else if (direction == Direction.back) {
+        return ClipRect(
+          child: SlideTransition(
+            position: outAnimation,
+            child: Padding(
+              padding: const EdgeInsets.all(8.0),
+              child: child,
+            ),
+          ),
+        );
+      } else {
+        return FadeTransition(opacity: animation, child: child);
+      }
+      // return ScaleTransition(child: child, scale: animation);
+    }
+  }
+}
+
 class Home extends StatelessWidget {
   @override
   Widget build(BuildContext context) => Scaffold(
@@ -302,6 +392,11 @@ class Home extends StatelessWidget {
     ),
     bottomNavigationBar: Application.instance.bottomNavBar()
   );
+}
+
+enum Direction {
+  back,
+  forward
 }
 
 class ApplicationState extends State<Application> {
@@ -323,44 +418,28 @@ class ApplicationState extends State<Application> {
     return widget.back().then((success) => !success);
   }
 
+  Screen? _previous;
+
   Widget createMain() {
-    final Widget current = widget.screen.get(widget.args);
-    if (!children.contains(current)) {
-      children.add(current);
+    final Screen current = widget.screen;
+    final Widget currentWidget = current.get(widget.args);
+    if (!children.contains(currentWidget)) {
+      children.add(currentWidget);
     }
-    final int index = children.indexOf(current);
+    final int index = children.indexOf(currentWidget);
+    final Direction? direction = widget.direction(_previous, current);
+    final Screen? previous = _previous;
+
+    _previous = current;
     final IndexedStack stack = IndexedStack(
       key: ValueKey<int>(index),
       index: index,
       children: children
     );
     return AnimatedSwitcher(
+      // transitionBuilder: widget.createTransition,
       transitionBuilder: (Widget child, Animation<double> animation) {
-        final inAnimation = Tween<Offset>(begin: Offset(1.0, 0.0), end: Offset(0.0, 0.0))
-            .animate(animation);
-        final outAnimation = Tween<Offset>(begin: Offset(-1.0, 0.0), end: Offset(0.0, 0.0))
-            .animate(animation);
-        if (child.key == stack.key) {
-          return ClipRect(
-            child: SlideTransition(
-              position: inAnimation,
-              child: Padding(
-                padding: const EdgeInsets.all(8.0),
-                child: child,
-              ),
-            ),
-          );
-        } else {
-          return ClipRect(
-            child: SlideTransition(
-              position: outAnimation,
-              child: Padding(
-                padding: const EdgeInsets.all(8.0),
-                child: child,
-              ),
-            ),
-          );
-        }
+        return widget.createTransition(previous, current, direction, child, animation);
       },
       duration: const Duration(milliseconds: 500),
       child: stack

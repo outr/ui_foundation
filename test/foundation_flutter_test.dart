@@ -1,6 +1,4 @@
-import 'package:flutter_test/flutter_test.dart';
-
-import 'package:foundation_flutter/foundation_flutter.dart';
+import 'package:foundation_flutter/foundation.dart';
 
 void main() {
 }

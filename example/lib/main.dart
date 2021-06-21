@@ -4,65 +4,74 @@ import 'package:foundation_flutter/foundation.dart';
 
 final NavBar navBar = NavBar();
 
-final Screen screen0 = Screen(create: (args) {
+final Screen screen0 = Screen(name: 'Begin', create: (args) {
   return ElevatedButton(
     onPressed: () => application.push(screen1),
     child: Text('Begin'),
   );
 }, cacheManager: ScreenCacheManager.always);
 
-final Screen screen1 = Screen(nav: Nav('Page 1', Icons.account_circle, navBar), create: (args) {
+final Screen screen1 = Screen(name: 'Page 1', nav: Nav('Page 1', Icons.account_circle, navBar), create: (args) {
   return PageOne();
 }, cacheManager: ScreenCacheManager.always);
 
-final Screen screen2 = Screen(nav: Nav('Page 2', Icons.settings, navBar), create: (args) {
+final Screen screen2 = Screen(name: 'Page 2', nav: Nav('Page 2', Icons.settings, navBar), create: (args) {
   return PageTwo();
 }, cacheManager: ScreenCacheManager.always);
 
-final Screen screen3 = Screen(nav: Nav('Page 3', Icons.nature, navBar), create: (args) {
+final Screen screen3 = Screen(name: 'Page 3', nav: Nav('Page 3', Icons.nature, navBar), create: (args) {
   return PageThree(args: args);
 }, cacheManager: ScreenCacheManager.always);
 
-final Screen details = Screen(parent: screen2, create: (params) {
+final Screen details = Screen(name: 'Details', parent: screen2, create: (params) {
   return DetailsPage();
 }, cacheManager: ScreenCacheManager.always);
 
-final Application<MyTheme> application = Application<MyTheme>(
-    title: 'My Application Test',
-    initialTheme: MyTheme.light,
-    screens: [screen0, screen1, screen2, details, screen3]
+final Application<AppState, MyTheme> application = Application<AppState, MyTheme>(
+  state: AppState(),
+  title: 'My Application Test',
+  initialTheme: MyTheme.light,
+  screens: [screen0, screen1, screen2, details, screen3]
 );
 
 void main() {
   runApp(application);
 }
 
+class AppState {
+  int _counter = 0;
+}
+
 class PageOne extends StatefulWidget {
   @override
   State createState() {
-    print('PageOne createState!');
     return PageOneState();
   }
 }
 
-class PageOneState extends State<PageOne> {
-  int _counter = 0;
-
+class PageOneState extends State<PageOne> with AutomaticKeepAliveClientMixin<PageOne> {
   @override
-  Widget build(BuildContext context) => Container(
+  Widget build(BuildContext context) {
+    super.build(context);
+
+    return Container(
       width: double.infinity,
-    color: Colors.white,
-    child: Column(
-      children: [
-        Text('Count: $_counter'),
-        ElevatedButton(onPressed: increment, child: Text("Increment"))
-      ],
-    )
-  );
+      color: Colors.white,
+      child: Column(
+        children: [
+          Text('Count: ${application.state._counter}'),
+          ElevatedButton(onPressed: increment, child: Text("Increment"))
+        ],
+      )
+    );
+  }
 
   void increment() => setState(() {
-    _counter++;
+    application.state._counter++;
   });
+
+  @override
+  bool get wantKeepAlive => true;
 }
 
 class PageTwo extends StatelessWidget {
