@@ -49,11 +49,9 @@ class PageOne extends StatefulWidget {
   }
 }
 
-class PageOneState extends State<PageOne> with AutomaticKeepAliveClientMixin<PageOne> {
+class PageOneState extends State<PageOne> {
   @override
   Widget build(BuildContext context) {
-    super.build(context);
-
     return Container(
       width: double.infinity,
       color: Colors.white,
@@ -69,9 +67,6 @@ class PageOneState extends State<PageOne> with AutomaticKeepAliveClientMixin<Pag
   void increment() => setState(() {
     application.state._counter++;
   });
-
-  @override
-  bool get wantKeepAlive => true;
 }
 
 class PageTwo extends StatelessWidget {
