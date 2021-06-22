@@ -34,18 +34,18 @@ class Screen extends ScreenListener {
   }
 
   Widget get(Arguments args) {
-    final Widget? cached = _cacheMap[args];
+    final Widget? cached = this.cached(args);
     if (cached != null) {
-      _invokeListeners(ScreenState.active, cached, args);
       return cached;
     } else {
       final Widget w = create(args);
-      _invokeListeners(ScreenState.create, w, args);
-      _invokeListeners(ScreenState.active, w, args);
+      invokeListeners(ScreenState.created, w, args);
       cacheManager?.cache(this, w, args);
       return w;
     }
   }
+
+  Widget? cached(Arguments args) => _cacheMap[args];
 
   Nav? getNav() => nav ?? parent?.getNav();
 
@@ -63,14 +63,14 @@ class Screen extends ScreenListener {
     final Widget? existing = _cacheMap[args];
     _cacheMap[args] = widget;
     if (existing != null) {
-      _invokeListeners(ScreenState.dispose, existing, args);
+      invokeListeners(ScreenState.disposed, existing, args);
     }
   }
 
   void removeFromCache(Widget widget, Arguments args) {
     final Widget? removed = _cacheMap.remove(args);
     if (removed != null) {
-      _invokeListeners(ScreenState.dispose, removed, args);
+      invokeListeners(ScreenState.disposed, removed, args);
     }
   }
 
@@ -86,13 +86,13 @@ class Screen extends ScreenListener {
     _listeners.remove(listener);
   }
 
-  void _invokeListeners(ScreenState state, Widget widget, Arguments args) {
+  void invokeListeners(ScreenState state, Widget? widget, Arguments args) {
     _listeners.forEach((listener) => listener.apply(this, state, widget, args));
   }
 
   @override
-  void apply(Screen screen, ScreenState state, Widget widget, Arguments args) {
-    if (state == ScreenState.dispose) {
+  void apply(Screen screen, ScreenState state, Widget? widget, Arguments args) {
+    if (state == ScreenState.disposed && widget != null) {
       Application.instance.children.remove(widget);
     }
   }
@@ -102,14 +102,14 @@ class Screen extends ScreenListener {
 }
 
 abstract class ScreenListener {
-  void apply(Screen screen, ScreenState state, Widget widget, Arguments args);
+  void apply(Screen screen, ScreenState state, Widget? widget, Arguments args);
 }
 
 enum ScreenState {
-  create,
-  active,
-  inactive,   // TODO: properly support
-  dispose
+  created,
+  activated,
+  deactivated,
+  disposed
 }
 
 class HistoryManager {
@@ -122,6 +122,13 @@ class HistoryManager {
   bool get isTop => _entries.length == 1;
 
   HistoryState get current => _entries.last;
+  HistoryState? get previous {
+    if (_entries.length > 1) {
+      return _entries[_entries.length - 2];
+    } else {
+      return null;
+    }
+  }
 
   Future<void> push(HistoryState state) {
     final HistoryState previous = current;
@@ -186,6 +193,9 @@ class HistoryState {
     }
     return false;
   }
+
+  @override
+  String toString() => '$screen ($args)';
 }
 
 class Arguments {
@@ -292,6 +302,10 @@ class Application<S, T extends AbstractTheme> extends StatefulWidget with Histor
     return transitionManager.create(previous, current, direction, firstWidget, child, animation);
   }
 
+  Duration getTransitionDuration(Screen? previous, Screen current, Direction? direction) {
+    return transitionManager.duration(previous, current, direction);
+  }
+
   @override
   void apply(HistoryAction action, HistoryState previous, HistoryState current) {
     instance.setState(() {});
@@ -342,21 +356,24 @@ class Application<S, T extends AbstractTheme> extends StatefulWidget with Histor
 abstract class TransitionManager {
   Widget create(Screen? previous, Screen current, Direction? direction, bool firstWidget, Widget child, Animation<double> animation);
 
+  Duration duration(Screen? previous, Screen current, Direction? direction);
+
   static final TransitionManager standard = _StandardTransitionManager();
 }
 
 class _StandardTransitionManager extends TransitionManager {
   @override
   Widget create(Screen? previous, Screen current, Direction? direction, bool firstWidget, Widget child, Animation<double> animation) {
-    if (current.nav == null) { // Child screens
-      return FadeTransition(opacity: animation, child: child);
-    } else if (direction != null) {
+    if (direction != null && current.nav != null) {
       return createMoveTransition(direction, firstWidget, child, animation);
     } else {
       return FadeTransition(opacity: animation, child: child);
     }
-      // return ScaleTransition(child: child, scale: animation);
+    // return ScaleTransition(child: child, scale: animation);
   }
+
+  @override
+  Duration duration(Screen? previous, Screen current, Direction? direction) => Duration(milliseconds: 500);
 
   static Widget createMoveTransition(Direction direction, bool firstWidget, Widget child, Animation<double> animation) {
     double beginX = 1.0;
@@ -415,7 +432,8 @@ class ApplicationState extends State<Application> {
 
   Widget createMain() {
     final Screen current = widget.screen;
-    final Widget currentWidget = current.get(widget.args);
+    final Arguments currentArgs = widget.args;
+    final Widget currentWidget = current.get(currentArgs);
     if (!children.contains(currentWidget)) {
       children.add(currentWidget);
     }
@@ -423,6 +441,14 @@ class ApplicationState extends State<Application> {
     final Direction? direction = widget.direction(_previous, current);
     final Screen? previous = _previous;
     bool first = previous != current;
+    if (previous != current) {    // Deactivate and Activate listeners for Screen
+      final HistoryState? previousState = widget.history.previous;
+      if (previousState != null) {
+        final Widget? previousWidget = previousState.screen.cached(previousState.args);
+        previousState.screen.invokeListeners(ScreenState.deactivated, previousWidget, previousState.args);
+      }
+      current.invokeListeners(ScreenState.activated, currentWidget, currentArgs);
+    }
 
     _previous = current;
     final IndexedStack stack = IndexedStack(
@@ -431,13 +457,12 @@ class ApplicationState extends State<Application> {
       children: children
     );
     return AnimatedSwitcher(
-      // transitionBuilder: widget.createTransition,
       transitionBuilder: (Widget child, Animation<double> animation) {
         final Widget transition = widget.createTransition(previous, current, direction, first, child, animation);
         first = false;
         return transition;
       },
-      duration: const Duration(milliseconds: 500),
+      duration: widget.getTransitionDuration(previous, current, direction),
       child: stack
     );
   }
