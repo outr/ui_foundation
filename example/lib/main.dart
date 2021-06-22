@@ -9,7 +9,7 @@ final Screen screen0 = Screen(name: 'Begin', create: (args) {
     onPressed: () => application.push(screen1),
     child: Text('Begin'),
   );
-}, cacheManager: ScreenCacheManager.always);
+});
 
 final Screen screen1 = Screen(name: 'Page 1', nav: Nav('Page 1', Icons.account_circle, navBar), create: (args) {
   return PageOne();
