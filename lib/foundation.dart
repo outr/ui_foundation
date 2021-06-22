@@ -288,8 +288,8 @@ class Application<S, T extends AbstractTheme> extends StatefulWidget with Histor
     return history.back();
   }
 
-  Widget createTransition(Screen? previous, Screen current, Direction? direction, Widget child, Animation<double> animation) {
-    return transitionManager.create(previous, current, direction, child, animation);
+  Widget createTransition(Screen? previous, Screen current, Direction? direction, bool firstWidget, Widget child, Animation<double> animation) {
+    return transitionManager.create(previous, current, direction, firstWidget, child, animation);
   }
 
   @override
@@ -340,47 +340,40 @@ class Application<S, T extends AbstractTheme> extends StatefulWidget with Histor
 }
 
 abstract class TransitionManager {
-  Widget create(Screen? previous, Screen current, Direction? direction, Widget child, Animation<double> animation);
+  Widget create(Screen? previous, Screen current, Direction? direction, bool firstWidget, Widget child, Animation<double> animation);
 
   static final TransitionManager standard = _StandardTransitionManager();
 }
 
 class _StandardTransitionManager extends TransitionManager {
   @override
-  Widget create(Screen? previous, Screen current, Direction? direction, Widget child, Animation<double> animation) {
-    if (current.nav == null) {   // Child screens
+  Widget create(Screen? previous, Screen current, Direction? direction, bool firstWidget, Widget child, Animation<double> animation) {
+    if (current.nav == null) { // Child screens
       return FadeTransition(opacity: animation, child: child);
-    } else {                    // Navigation screens
-      final inAnimation = Tween<Offset>(begin: Offset(1.0, 0.0), end: Offset(0.0, 0.0))
-          .animate(animation);
-      final outAnimation = Tween<Offset>(begin: Offset(-1.0, 0.0), end: Offset(0.0, 0.0))
-          .animate(animation);
-      // print('Transition: ${child.key} / ${stack.key}');
-      if (direction == Direction.forward) {
-        return ClipRect(
-          child: SlideTransition(
-            position: inAnimation,
-            child: Padding(
-              padding: const EdgeInsets.all(8.0),
-              child: child,
-            ),
-          ),
-        );
-      } else if (direction == Direction.back) {
-        return ClipRect(
-          child: SlideTransition(
-            position: outAnimation,
-            child: Padding(
-              padding: const EdgeInsets.all(8.0),
-              child: child,
-            ),
-          ),
-        );
-      } else {
-        return FadeTransition(opacity: animation, child: child);
-      }
-      // return ScaleTransition(child: child, scale: animation);
+    } else if (direction != null) {
+      return createMoveTransition(direction, firstWidget, child, animation);
+    } else {
+      return FadeTransition(opacity: animation, child: child);
     }
+      // return ScaleTransition(child: child, scale: animation);
+  }
+
+  static Widget createMoveTransition(Direction direction, bool firstWidget, Widget child, Animation<double> animation) {
+    double beginX = 1.0;
+    if (direction == Direction.forward && firstWidget) {
+      beginX = -1.0;
+    } else if (direction == Direction.back && !firstWidget) {
+      beginX = -1.0;
+    }
+    return ClipRect(
+      child: SlideTransition(
+        position: Tween<Offset>(begin: Offset(beginX, 0.0), end: Offset(0.0, 0.0)).animate(animation),
+        child: Padding(
+          padding: const EdgeInsets.all(8.0),
+          child: child,
+        ),
+      ),
+    );
   }
 }
 
@@ -429,6 +422,7 @@ class ApplicationState extends State<Application> {
     final int index = children.indexOf(currentWidget);
     final Direction? direction = widget.direction(_previous, current);
     final Screen? previous = _previous;
+    bool first = previous != current;
 
     _previous = current;
     final IndexedStack stack = IndexedStack(
@@ -439,7 +433,9 @@ class ApplicationState extends State<Application> {
     return AnimatedSwitcher(
       // transitionBuilder: widget.createTransition,
       transitionBuilder: (Widget child, Animation<double> animation) {
-        return widget.createTransition(previous, current, direction, child, animation);
+        final Widget transition = widget.createTransition(previous, current, direction, first, child, animation);
+        first = false;
+        return transition;
       },
       duration: const Duration(milliseconds: 500),
       child: stack
