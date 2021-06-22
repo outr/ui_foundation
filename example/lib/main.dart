@@ -13,19 +13,19 @@ final Screen screen0 = Screen(name: 'Begin', create: (args) {
 
 final Screen screen1 = Screen(name: 'Page 1', nav: Nav('Page 1', Icons.account_circle, navBar), create: (args) {
   return PageOne();
-}, cacheManager: ScreenCacheManager.always);
+});
 
 final Screen screen2 = Screen(name: 'Page 2', nav: Nav('Page 2', Icons.settings, navBar), create: (args) {
   return PageTwo();
-}, cacheManager: ScreenCacheManager.always);
+});
 
 final Screen screen3 = Screen(name: 'Page 3', nav: Nav('Page 3', Icons.nature, navBar), create: (args) {
   return PageThree(args: args);
-}, cacheManager: ScreenCacheManager.always);
+});
 
 final Screen details = Screen(name: 'Details', parent: screen2, create: (params) {
   return DetailsPage();
-}, cacheManager: ScreenCacheManager.always);
+});
 
 final Application<AppState, MyTheme> application = Application<AppState, MyTheme>(
   state: AppState(),
