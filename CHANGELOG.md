@@ -15,3 +15,7 @@
 - Created history management system for far greater flexibility
 - Transition functionality with standard defaults
 - Support for multiple navigation bars in a single application
+
+## [0.1.1]
+- Removal of IndexedStack for better performance and reliability
+- Bug fixes for screen switching and miscellaneous other items
