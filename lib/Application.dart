@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 
 import 'foundation.dart';
 
-class Application<S, T extends AbstractTheme> extends StatefulWidget with HistoryListener {
+class Application<S, T extends AbstractTheme> extends StatefulWidget {
   final S state;
   final String title;
   final Widget Function() createHomeWidget;
@@ -29,30 +29,48 @@ class Application<S, T extends AbstractTheme> extends StatefulWidget with Histor
     required this.state,
     required this.title,
     required T initialTheme,
+    Screen? initialScreen,
     required this.screens,
     Widget Function()? createHomeWidget,
     TransitionManager? transitionManager
   }):
-        history = HistoryManager(HistoryState(screens.first, Arguments.empty)),
-        _theme = initialTheme,
-        this.createHomeWidget = createHomeWidget ?? (() => Home()),
-        this.transitionManager = transitionManager ?? TransitionManager.standard {
-    history.listen(this);
-  }
+      history = HistoryManager(HistoryState(initialScreen ?? screens.first, Arguments.empty)),
+      _theme = initialTheme,
+      this.createHomeWidget = createHomeWidget ?? (() => Home()),
+      this.transitionManager = transitionManager ?? TransitionManager.standard;
 
   @override
   State createState() => ApplicationState();
 
   Future<void> push(Screen screen, {Arguments? args}) {
-    return history.push(HistoryState(screen, args ?? Arguments.empty));
+    final Arguments arguments = args ?? Arguments.empty;
+    HistoryState current = history.current;
+    if (current.screen != screen || current.args != arguments) {
+      return history
+        .push(HistoryState(screen, arguments))
+        .then((value) => instance.setState(() {}));
+    } else {
+      return Future.value(null);
+    }
   }
 
   Future<void> replace(Screen screen, {Arguments? args}) {
-    return history.replace(HistoryState(screen, args ?? Arguments.empty));
+    final Arguments arguments = args ?? Arguments.empty;
+    HistoryState current = history.current;
+    if (current.screen == screen && current.args == arguments) {
+      return Future.value(null);
+    } else {
+      return history
+        .replace(HistoryState(screen, args ?? Arguments.empty))
+        .then((value) => instance.setState(() {}));
+    }
   }
 
   Future<bool> back() {
-    return history.back();
+    return history.back().then((value) {
+      instance.setState(() {});
+      return value;
+    });
   }
 
   Widget createTransition(Screen? previous, Screen current, Direction? direction, bool firstWidget, Widget child, Animation<double> animation) {
@@ -61,11 +79,6 @@ class Application<S, T extends AbstractTheme> extends StatefulWidget with Histor
 
   Duration getTransitionDuration(Screen? previous, Screen current, Direction? direction) {
     return transitionManager.duration(previous, current, direction);
-  }
-
-  @override
-  void apply(HistoryAction action, HistoryState previous, HistoryState current) {
-    instance.setState(() {});
   }
 
   void reloadAll() {
