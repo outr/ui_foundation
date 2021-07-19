@@ -19,3 +19,7 @@
 ## [0.1.1]
 - Removal of IndexedStack for better performance and reliability
 - Bug fixes for screen switching and miscellaneous other items
+
+## [0.1.2]
+- Faster animations by defaults
+- Support for per-screen `includeSafeArea`
