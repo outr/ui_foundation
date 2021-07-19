@@ -57,7 +57,10 @@ class PageOneState extends State<PageOne> {
       color: Colors.white,
       child: Column(
         children: [
-          Text('Count: ${application.state._counter}'),
+          Padding(
+            child: Text('Count: ${application.state._counter}', style: Theme.of(context).textTheme.headline4),
+            padding: EdgeInsets.only(top: 20.0)
+          ),
           ElevatedButton(onPressed: increment, child: Text("Increment"))
         ],
       )

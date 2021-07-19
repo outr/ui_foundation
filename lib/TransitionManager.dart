@@ -22,7 +22,7 @@ class _StandardTransitionManager extends TransitionManager {
   }
 
   @override
-  Duration duration(Screen? previous, Screen current, Direction? direction) => Duration(milliseconds: 500);
+  Duration duration(Screen? previous, Screen current, Direction? direction) => Duration(milliseconds: 200);
 
   static Widget createMoveTransition(Direction direction, bool firstWidget, Widget child, Animation<double> animation) {
     double beginX = 1.0;

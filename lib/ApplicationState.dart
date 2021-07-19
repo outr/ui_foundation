@@ -5,14 +5,14 @@ import 'foundation.dart';
 class ApplicationState extends State<Application> {
   @override
   Widget build(BuildContext context) => MaterialApp(
-      title: widget.title,
-      navigatorKey: Application.navKey,
-      theme: widget.theme.data(),
-      debugShowCheckedModeBanner: false,
-      home: WillPopScope(
-          onWillPop: _willPop,
-          child: widget.createHomeWidget()
-      )
+    title: widget.title,
+    navigatorKey: Application.navKey,
+    theme: widget.theme.data(),
+    debugShowCheckedModeBanner: false,
+    home: WillPopScope(
+      onWillPop: _willPop,
+      child: widget.createHomeWidget()
+    )
   );
 
   Future<bool> _willPop() async {
@@ -38,7 +38,12 @@ class ApplicationState extends State<Application> {
 
     _previous = current;
 
-    final AnimatedSwitcher switcher = AnimatedSwitcher(
+    Widget child = currentWidget;
+    if (current.includeSafeArea) {
+      child = SafeArea(child: child);
+    }
+
+    return AnimatedSwitcher(
       transitionBuilder: (Widget child, Animation<double> animation) {
         final Widget transition = widget.createTransition(previous, current, direction, first, child, animation);
         first = false;
@@ -47,15 +52,9 @@ class ApplicationState extends State<Application> {
       duration: widget.getTransitionDuration(previous, current, direction),
       child: Container(
         key: ValueKey<String>('${current.name}:$currentArgs'),
-        child: currentWidget,
+        child: child,
       )
     );
-
-    if (current.includeSafeArea) {
-      return SafeArea(child: switcher);
-    } else {
-      return switcher;
-    }
   }
 
   Widget? bottomNavBar() {
