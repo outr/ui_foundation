@@ -7,6 +7,7 @@ class Screen {
   final Nav? nav;
   final Screen? parent;
   final Widget Function(Arguments) create;
+  final bool includeSafeArea;
 
   final List<ScreenListener> _listeners = [];
 
@@ -14,8 +15,10 @@ class Screen {
     required this.name,
     required this.create,
     this.nav,
-    this.parent
-  });
+    this.parent,
+    bool? includeSafeArea
+  }):
+    this.includeSafeArea = includeSafeArea ?? true;
 
   Widget get(Arguments args) => create(args);
 

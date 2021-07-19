@@ -38,7 +38,7 @@ class ApplicationState extends State<Application> {
 
     _previous = current;
 
-    return AnimatedSwitcher(
+    final AnimatedSwitcher switcher = AnimatedSwitcher(
       transitionBuilder: (Widget child, Animation<double> animation) {
         final Widget transition = widget.createTransition(previous, current, direction, first, child, animation);
         first = false;
@@ -50,6 +50,12 @@ class ApplicationState extends State<Application> {
         child: currentWidget,
       )
     );
+
+    if (current.includeSafeArea) {
+      return SafeArea(child: switcher);
+    } else {
+      return switcher;
+    }
   }
 
   Widget? bottomNavBar() {

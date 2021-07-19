@@ -7,19 +7,11 @@ final NavBar navBar = NavBar();
 final Screen screen0 = Screen(name: 'Begin', create: (args) {
   return ElevatedButton(
     onPressed: () => application.push(screen1),
-    child: Testing() //Text('Begin'),
+    child: Text('Begin'),
   );
 });
 
-class Testing extends StatelessWidget {
-  @override
-  Widget build(BuildContext context) {
-    application.push(screen1);
-    return Text("Testing");
-  }
-}
-
-final Screen screen1 = Screen(name: 'Page 1', nav: Nav('Page 1', Icons.account_circle, navBar), create: (args) {
+final Screen screen1 = Screen(name: 'Page 1', includeSafeArea: false, nav: Nav('Page 1', Icons.account_circle, navBar), create: (args) {
   return PageOne();
 });
 

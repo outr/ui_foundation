@@ -5,9 +5,7 @@ import 'foundation.dart';
 class Home extends StatelessWidget {
   @override
   Widget build(BuildContext context) => Scaffold(
-      body: SafeArea(
-          child: Application.instance.createMain()
-      ),
+      body: Application.instance.createMain(),
       bottomNavigationBar: Application.instance.bottomNavBar()
   );
 }
