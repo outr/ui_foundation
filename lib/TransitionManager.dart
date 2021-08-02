@@ -35,7 +35,7 @@ class _StandardTransitionManager extends TransitionManager {
       child: SlideTransition(
         position: Tween<Offset>(begin: Offset(beginX, 0.0), end: Offset(0.0, 0.0)).animate(animation),
         child: Padding(
-          padding: const EdgeInsets.all(8.0),
+          padding: const EdgeInsets.all(0.0),
           child: child,
         ),
       ),
