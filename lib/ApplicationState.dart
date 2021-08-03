@@ -65,11 +65,12 @@ class ApplicationState extends State<Application> {
     } else {
       final Screen navScreen = screen.getNavScreen()!;
       final NavBar bar = nav.bar;
-      final List<Screen> screens = widget.screens.where((s) => s.hasNavBar(bar)).toList(growable: false);
-      final List<BottomNavigationBarItem> items = screens.map((s) => BottomNavigationBarItem(
-        icon: Icon(s.nav!.icon),
-        label: s.nav!.label
-      )).toList(growable: false);
+      final List<Screen> screens =
+          widget.screens.where((s) => s.hasNavBar(bar)).toList(growable: false);
+      final List<BottomNavigationBarItem> items = screens
+          .map((s) => BottomNavigationBarItem(
+              icon: Icon(s.nav!.icon, size: 30), label: s.nav!.label))
+          .toList(growable: false);
       return BottomNavigationBar(
         type: BottomNavigationBarType.fixed,
         currentIndex: screens.indexOf(navScreen),
