@@ -1,22 +1,22 @@
 import 'foundation.dart';
 
-class HistoryState {
-  final Screen screen;
-  final Arguments args;
+class HistoryState<V> {
+  final Screen<V> screen;
+  final V value;
 
-  HistoryState(this.screen, this.args);
+  HistoryState(this.screen, this.value);
 
   @override
-  int get hashCode => screen.hashCode + args.hashCode;
+  int get hashCode => screen.hashCode + value.hashCode;
 
   @override
   bool operator ==(Object other) {
     if (other is HistoryState) {
-      return screen == other.screen && args == other.args;
+      return screen == other.screen && value == other.value;
     }
     return false;
   }
 
   @override
-  String toString() => '$screen ($args)';
+  String toString() => '$screen ($value)';
 }

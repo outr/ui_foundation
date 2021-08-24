@@ -4,30 +4,64 @@ import 'package:foundation_flutter/foundation.dart';
 
 final NavBar navBar = NavBar();
 
-final Screen screen0 = Screen(name: 'Begin', create: (args) {
-  return ElevatedButton(
+class Data {}
+
+class PageThreeData extends Data {
+  final String message;
+
+  PageThreeData(this.message);
+}
+
+class Screen0 extends Screen<Data> {
+  Screen0():
+    super(name: 'Begin', defaultValue: Data());
+
+  @override
+  Widget create(Data value) => ElevatedButton(
     onPressed: () => application.push(screen1),
     child: Text('Begin'),
   );
-});
+}
 
-final Screen screen1 = Screen(name: 'Page 1', includeSafeArea: false, nav: Nav('Page 1', Icons.account_circle, navBar), create: (args) {
-  return PageOne();
-});
+class Screen1 extends Screen<Data> {
+  Screen1():
+    super(name: 'Page 1', defaultValue: Data(), includeSafeArea: false, nav: Nav('Page 1', Icons.account_circle, navBar));
 
-final Screen screen2 = Screen(name: 'Page 2', nav: Nav('Page 2', Icons.settings, navBar), create: (args) {
-  return PageTwo();
-});
+  @override
+  Widget create(Data value) => PageOne();
+}
 
-final Screen screen3 = Screen(name: 'Page 3', nav: Nav('Page 3', Icons.nature, navBar), create: (args) {
-  return PageThree(args: args);
-});
+class Screen2 extends Screen<Data> {
+  Screen2():
+    super(name: 'Page 2', defaultValue: Data(), nav: Nav('Page 2', Icons.settings, navBar));
 
-final Screen details = Screen(name: 'Details', parent: screen2, create: (params) {
-  return DetailsPage();
-});
+  @override
+  Widget create(Data value) => PageTwo();
+}
 
-final Application<AppState, MyTheme> application = Application<AppState, MyTheme>(
+class Screen3 extends Screen<PageThreeData> {
+  Screen3():
+    super(name: 'Page 3', defaultValue: PageThreeData("Default!"), nav: Nav('Page 3', Icons.nature, navBar));
+
+  @override
+  Widget create(PageThreeData value) => PageThree(data: value);
+}
+
+class Details extends Screen<Data> {
+  Details():
+    super(name: 'Details', defaultValue: Data(), parent: screen2);
+
+  @override
+  Widget create(Data value) => DetailsPage();
+}
+
+final Screen0 screen0 = Screen0();
+final Screen1 screen1 = Screen1();
+final Screen2 screen2 = Screen2();
+final Screen3 screen3 = Screen3();
+final Details details = Details();
+
+final Application<AppState, Data, MyTheme> application = Application(
   state: AppState(),
   title: 'My Application Test',
   initialTheme: MyTheme.light,
@@ -49,9 +83,12 @@ class PageOne extends StatefulWidget {
   }
 }
 
-class PageOneState extends State<PageOne> {
+class PageOneState extends State<PageOne> with AutomaticKeepAliveClientMixin<PageOne> {
   @override
   Widget build(BuildContext context) {
+    super.build(context);
+
+    print("***** REBUILDING PAGE 1");
     return Container(
       width: double.infinity,
       color: Colors.white,
@@ -70,6 +107,9 @@ class PageOneState extends State<PageOne> {
   void increment() => setState(() {
     application.state._counter++;
   });
+
+  @override
+  bool get wantKeepAlive => true;
 }
 
 class PageTwo extends StatelessWidget {
@@ -88,7 +128,7 @@ class PageTwo extends StatelessWidget {
                 style: application.theme.specialButton,
               ),
               ElevatedButton(
-                onPressed: () => application.push(screen3, args: Arguments({'test': 'Hello, World'})),
+                onPressed: () => application.push(screen3, value: PageThreeData('Hello, World')),
                 child: Text('Go to Page 3'),
               ),
               ElevatedButton(
@@ -125,16 +165,16 @@ class DetailsPage extends StatelessWidget {
 }
 
 class PageThree extends StatelessWidget {
-  final Arguments args;
+  final Data data;
 
-  const PageThree({Key? key, required this.args}) : super(key: key);
+  const PageThree({Key? key, required this.data}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
     return Container(
       color: Colors.white,
       alignment: Alignment.center,
-      child: Text('Three: $args'),
+      child: Text('Three: $data'),
     );
   }
 }

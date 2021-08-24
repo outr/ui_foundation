@@ -1,10 +1,10 @@
 import 'foundation.dart';
 
-class HistoryManager {
-  final List<HistoryState> _entries;
+class HistoryManager<V> {
+  final List<HistoryState<V>> _entries;
   final List<HistoryListener> _listeners = [];
 
-  HistoryManager(HistoryState initialState):
+  HistoryManager(HistoryState<V> initialState):
         _entries = [initialState];
 
   bool get isTop => _entries.length == 1;
@@ -18,14 +18,14 @@ class HistoryManager {
     }
   }
 
-  Future<void> push(HistoryState state) {
+  Future<void> push(HistoryState<V> state) {
     final HistoryState previous = current;
     _entries.add(state);
     _invokeListeners(HistoryAction.push, previous, state);
     return Future.value(null);
   }
 
-  Future<void> replace(HistoryState state) {
+  Future<void> replace(HistoryState<V> state) {
     final HistoryState previous = current;
     _entries.removeLast();
     _entries.add(state);

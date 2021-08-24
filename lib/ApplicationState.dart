@@ -1,8 +1,22 @@
 import 'package:flutter/material.dart';
+import 'package:foundation_flutter/MapStack.dart';
 
 import 'foundation.dart';
 
-class ApplicationState extends State<Application> {
+class ApplicationState<V> extends State<Application> {
+  final MapStack<V> _stack = MapStack<V>();
+
+  @override
+  void initState() {
+    super.initState();
+
+    widget.screens.forEach((s) {
+      Screen<V> screen = s as Screen<V>;
+      Widget widget = screen.create(screen.defaultValue as V);
+      _stack.add(screen.defaultValue, widget);
+    });
+  }
+
   @override
   Widget build(BuildContext context) => MaterialApp(
     title: widget.title,
@@ -23,17 +37,17 @@ class ApplicationState extends State<Application> {
 
   Widget createMain() {
     final Screen current = widget.screen;
-    final Arguments currentArgs = widget.args;
-    final Widget currentWidget = current.get(currentArgs);
+    final V currentValue = widget.value;
+    final Widget currentWidget = current.get(currentValue);
     final Direction? direction = widget.direction(_previous, current);
     final Screen? previous = _previous;
     bool first = previous != current;
     if (previous != current) {    // Deactivate and Activate listeners for Screen
       final HistoryState? previousState = widget.history.previous;
       if (previousState != null) {
-        previousState.screen.invokeListeners(ScreenState.deactivated, null, previousState.args);
+        previousState.screen.invokeListeners(ScreenState.deactivated, null, previousState.value);
       }
-      current.invokeListeners(ScreenState.activated, currentWidget, currentArgs);
+      current.invokeListeners(ScreenState.activated, currentWidget, currentValue);
     }
 
     _previous = current;
@@ -43,7 +57,12 @@ class ApplicationState extends State<Application> {
       child = SafeArea(child: child);
     }
 
-    return AnimatedSwitcher(
+    // final IndexedStack stack = IndexedStack(
+    //   key: ValueKey<String>('${current.name}:$currentArgs'),
+    //   children: [],
+    // )
+
+    /*return AnimatedSwitcher(
       transitionBuilder: (Widget child, Animation<double> animation) {
         final Widget transition = widget.createTransition(previous, current, direction, first, child, animation);
         first = false;
@@ -54,7 +73,11 @@ class ApplicationState extends State<Application> {
         key: ValueKey<String>('${current.name}:$currentArgs'),
         child: child,
       )
-    );
+    );*/
+
+    // return child;
+
+    return _stack;
   }
 
   Widget? bottomNavBar() {

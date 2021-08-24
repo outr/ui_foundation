@@ -2,25 +2,36 @@ import 'package:flutter/material.dart';
 
 import 'foundation.dart';
 
-class Screen {
+abstract class Screen<V> {
   final String name;
+  final V defaultValue;
   final Nav? nav;
   final Screen? parent;
-  final Widget Function(Arguments) create;
   final bool includeSafeArea;
+
+  Widget? _cached;
 
   final List<ScreenListener> _listeners = [];
 
   Screen({
     required this.name,
-    required this.create,
+    required this.defaultValue,
     this.nav,
     this.parent,
     bool? includeSafeArea
   }):
     this.includeSafeArea = includeSafeArea ?? true;
 
-  Widget get(Arguments args) => create(args);
+  Widget create(covariant V value);
+
+  Widget get(V value) {
+    // TODO: validate this logic
+    if (_cached == null) {
+      print('Creating new instance of $name');
+      _cached = create(value);
+    }
+    return _cached!;
+  }
 
   Nav? getNav() => nav ?? parent?.getNav();
 
@@ -42,8 +53,8 @@ class Screen {
     _listeners.remove(listener);
   }
 
-  void invokeListeners(ScreenState state, Widget? widget, Arguments args) {
-    _listeners.forEach((listener) => listener.apply(this, state, widget, args));
+  void invokeListeners(ScreenState state, Widget? widget, V value) {
+    _listeners.forEach((listener) => listener.apply(this, state, widget, value));
   }
 
   @override
