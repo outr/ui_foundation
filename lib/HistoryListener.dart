@@ -1,5 +1,5 @@
 import 'foundation.dart';
 
-abstract class HistoryListener {
-  void apply(HistoryAction action, HistoryState previous, HistoryState current);
+abstract class HistoryListener<V> {
+  void apply(HistoryAction action, HistoryState<V> previous, HistoryState<V> current);
 }

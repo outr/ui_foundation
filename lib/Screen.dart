@@ -10,6 +10,7 @@ abstract class Screen<V> {
   final bool includeSafeArea;
 
   Widget? _cached;
+  V? _value;
 
   final List<ScreenListener> _listeners = [];
 
@@ -24,13 +25,18 @@ abstract class Screen<V> {
 
   Widget create(covariant V value);
 
-  Widget get(V value) {
-    // TODO: validate this logic
-    if (_cached == null) {
-      print('Creating new instance of $name');
-      _cached = create(value);
+  Widget get(covariant V value) {
+    if (_cached != null && _value == value) {
+      return _cached!;
+    } else {
+      Widget widget = create(value);
+      if (includeSafeArea) {
+        widget = new SafeArea(child: widget);
+      }
+      _cached = widget;
+      _value = value;
+      return widget;
     }
-    return _cached!;
   }
 
   Nav? getNav() => nav ?? parent?.getNav();

@@ -3,7 +3,7 @@ import 'package:foundation_flutter/MapStack.dart';
 
 import 'foundation.dart';
 
-class ApplicationState<V> extends State<Application> {
+class ApplicationState<V> extends State<Application> with HistoryListener<V> {
   final MapStack<V> _stack = MapStack<V>();
 
   @override
@@ -12,9 +12,16 @@ class ApplicationState<V> extends State<Application> {
 
     widget.screens.forEach((s) {
       Screen<V> screen = s as Screen<V>;
-      Widget widget = screen.create(screen.defaultValue as V);
+      Widget widget = screen.get(screen.defaultValue);
       _stack.add(screen.defaultValue, widget);
     });
+    widget.history.listen(this);
+  }
+
+  @override
+  void apply(HistoryAction action, HistoryState<V> previous, HistoryState<V> current) {
+    print('History: $action, previous: $previous, current: $current');
+    // TODO: set _stack based on current history
   }
 
   @override
