@@ -19,7 +19,16 @@ class ApplicationState extends State<Application> with HistoryListener {
   @override
   void apply(HistoryAction action, ScreenState previous, ScreenState current) {
     print('History: $action, previous: $previous, current: $current');
-    // TODO: set _stack based on current history
+    if (!_stack.contains(current)) {
+      print('State doesn\'t already exist. Adding...');
+      _stack.add(current, current.screen.get(current));
+    } else {
+      print('State already added.');
+    }
+    // TODO: manage existing states for current screen (can there be more than one?)
+    setState(() {
+      _stack.active = current;
+    });
   }
 
   @override
@@ -50,14 +59,6 @@ class ApplicationState extends State<Application> with HistoryListener {
       }
       state.screen.invokeListeners(state, ScreenStatus.activated, currentWidget);
     }
-
-    Widget child = currentWidget;
-    if (state.screen.includeSafeArea) {
-      child = SafeArea(child: child);
-    }
-
-    // TODO: Export this part
-    print('createMain called! We need to potentially add the widget...');
 
     // final IndexedStack stack = IndexedStack(
     //   key: ValueKey<String>('${current.name}:$currentArgs'),

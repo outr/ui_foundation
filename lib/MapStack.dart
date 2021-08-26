@@ -12,6 +12,8 @@ class MapStack<T> extends StatefulWidget {
   T get active => _reverseMap[_instance!.index]!;
   set active(T t) => _instance!.index = _map[t]!;
 
+  bool contains(T t) => _map.containsKey(t);
+
   void add(T key, Widget widget) {
     if (_instance != null) {
       _instance!.setState(() {
