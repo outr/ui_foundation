@@ -2,17 +2,22 @@ import 'dart:collection';
 
 import 'package:flutter/material.dart';
 
+// TODO: Support customized animations
 class MapStack<T> extends StatefulWidget {
-  final HashMap<T, int> _map = new HashMap();
-  final HashMap<int, T> _reverseMap = new HashMap();
+  final List<T> _keys = [];
   final List<Widget> _widgets = [];
 
+  T? _active;
   MapStackState? _instance;
 
-  T get active => _reverseMap[_instance!.index]!;
-  set active(T t) => _instance!.index = _map[t]!;
+  T get active => _active!;
+  set active(T t) {
+    _instance?.index = _keys.indexOf(t);
+  }
 
-  bool contains(T t) => _map.containsKey(t);
+  Iterable<T> get keys => _keys;
+
+  bool contains(T t) => _keys.contains(t);
 
   void add(T key, Widget widget) {
     if (_instance != null) {
@@ -21,6 +26,9 @@ class MapStack<T> extends StatefulWidget {
       });
     } else {
       _add(key, widget);
+    }
+    if (_active == null) {
+      active = key;
     }
   }
 
@@ -37,23 +45,18 @@ class MapStack<T> extends StatefulWidget {
   }
 
   void _add(T key, Widget widget) {
-    int offset = _widgets.length;
+    _keys.add(key);
     _widgets.add(widget);
-    _map[key] = offset;
-    _reverseMap[offset] = key;
   }
 
   Widget? _remove(T key) {
-    int? index = _map[key];
-    if (index != null) {
-      Widget widget = _widgets[index];
-      _widgets.remove(widget);
-      _map.remove(key);
-      _reverseMap.remove(widget);
-      return widget;
-    } else {
-      return null;
+    int index = _keys.indexOf(key);
+    if (index != -1) {
+      _keys.remove(key);
+      return _widgets.removeAt(index);
     }
+    // TODO: deal with removal of active
+    return null;
   }
 
   @override
