@@ -37,12 +37,14 @@ class Screen2 extends Screen {
   Widget create(ScreenState state) => PageTwo();
 }
 
-class Screen3 extends Screen {
+class Screen3 extends TypedScreen<PageThreeData> {
   Screen3():
-    super(name: 'Page 3', nav: Nav('Page 3', Icons.nature, navBar));
+    super(name: 'Page 3', defaultValue: PageThreeData('Default!'), nav: Nav('Page 3', Icons.nature, navBar));
 
   @override
-  Widget create(ScreenState state) => PageThree(data: PageThreeData('Replace!'));
+  Widget createTyped(TypedScreenState<PageThreeData> state) {
+    return PageThree(data: state.value);
+  }
 }
 
 class Details extends Screen {
@@ -126,7 +128,7 @@ class PageTwo extends StatelessWidget {
                 style: application.theme.specialButton,
               ),
               ElevatedButton(
-                onPressed: () => application.pushScreen(screen3), //, value: PageThreeData('Hello, World')),
+                onPressed: () => application.push(screen3.createTypedState(PageThreeData('Hello, World!'))),
                 child: Text('Go to Page 3'),
               ),
               ElevatedButton(
@@ -172,7 +174,7 @@ class PageThree extends StatelessWidget {
     return Container(
       color: Colors.white,
       alignment: Alignment.center,
-      child: Text('Three: $data'),
+      child: Text('Three: ${data.message}'),
     );
   }
 }
