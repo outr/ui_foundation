@@ -7,6 +7,7 @@ abstract class Screen {
   final Nav? nav;
   final Screen? parent;
   final bool includeSafeArea;
+  final ScreenManager manager;
 
   ScreenState? _state;
   Widget? _cached;
@@ -17,9 +18,11 @@ abstract class Screen {
     required this.name,
     this.nav,
     this.parent,
-    bool? includeSafeArea
+    bool? includeSafeArea,
+    ScreenManager? manager
   }):
-    this.includeSafeArea = includeSafeArea ?? true;
+    this.includeSafeArea = includeSafeArea ?? true,
+    this.manager = manager ?? ScreenManager.singleton;
 
   ScreenState createState() => ScreenState(this);
 

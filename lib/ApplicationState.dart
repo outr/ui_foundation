@@ -4,14 +4,14 @@ import 'package:foundation_flutter/MapStack.dart';
 import 'foundation.dart';
 
 class ApplicationState extends State<Application> with HistoryListener {
-  final MapStack<ScreenState> _stack = MapStack<ScreenState>();
+  final MapStack<ScreenState> stack = MapStack<ScreenState>();
 
   @override
   void initState() {
     super.initState();
 
     ScreenState initial = widget.history.current;
-    _stack.add(initial, initial.screen.get(initial));
+    stack.add(initial, initial.screen.get(initial));
 
     widget.history.listen(this);
   }
@@ -19,15 +19,15 @@ class ApplicationState extends State<Application> with HistoryListener {
   @override
   void apply(HistoryAction action, ScreenState previous, ScreenState current) {
     print('History: $action, previous: $previous, current: $current');
-    if (!_stack.contains(current)) {
+    if (!stack.contains(current)) {
       print('State doesn\'t already exist. Adding...');
-      _stack.add(current, current.screen.get(current));
+      stack.add(current, current.screen.get(current));
     } else {
       print('State already added.');
     }
-    // TODO: manage existing states for current screen (can there be more than one?)
     setState(() {
-      _stack.active = current;
+      current.screen.manager.activating(this, current);
+      stack.active = current;
     });
   }
 
@@ -80,7 +80,7 @@ class ApplicationState extends State<Application> with HistoryListener {
 
     // return child;
 
-    return _stack;
+    return stack;
   }
 
   Widget? bottomNavBar() {

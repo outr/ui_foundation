@@ -15,7 +15,7 @@ class MapStack<T> extends StatefulWidget {
     _instance?.index = _keys.indexOf(t);
   }
 
-  Iterable<T> get keys => _keys;
+  List<T> get keys => _keys.toList(growable: false);
 
   bool contains(T t) => _keys.contains(t);
 
@@ -53,9 +53,15 @@ class MapStack<T> extends StatefulWidget {
     int index = _keys.indexOf(key);
     if (index != -1) {
       _keys.remove(key);
-      return _widgets.removeAt(index);
+      Widget widget = _widgets.removeAt(index);
+      if (_active == key) {
+        if (index > 0) {
+          index--;
+        }
+        active = _keys[0];
+      }
+      return widget;
     }
-    // TODO: deal with removal of active
     return null;
   }
 
