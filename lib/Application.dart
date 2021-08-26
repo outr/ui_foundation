@@ -2,19 +2,16 @@ import 'package:flutter/material.dart';
 
 import 'foundation.dart';
 
-class Application<S, V, T extends AbstractTheme> extends StatefulWidget {
+class Application<S, T extends AbstractTheme> extends StatefulWidget {
   final S state;
   final String title;
   final Widget Function() createHomeWidget;
   final TransitionManager transitionManager;
 
-  final List<Screen<V>> screens;
+  final List<Screen> screens;
   final HistoryManager history;
 
   T _theme;
-
-  Screen get screen => history.current.screen;
-  V get value => history.current.value;
 
   T get theme => _theme;
   set theme(T theme) {
@@ -34,41 +31,38 @@ class Application<S, V, T extends AbstractTheme> extends StatefulWidget {
     Widget Function()? createHomeWidget,
     TransitionManager? transitionManager
   }):
-      history = HistoryManager(HistoryState(initialScreen ?? screens.first, screens.first.defaultValue)),
+      history = HistoryManager((initialScreen ?? screens.first).createState()),
       _theme = initialTheme,
       this.createHomeWidget = createHomeWidget ?? (() => Home()),
       this.transitionManager = transitionManager ?? TransitionManager.standard;
 
   @override
-  State createState() => ApplicationState<V>();
+  State createState() => ApplicationState();
 
-  Future<void> push(Screen<V> screen, {V? value}) {
-    final V v = value ?? screen.defaultValue;
-    HistoryState current = history.current;
-    if (current.screen != screen || current.value != v) {
-      return history
-        .push(HistoryState(screen, v))
-        .then((value) => instance.setState(() {}));     // TODO: avoid setState
+  Future<void> pushScreen(Screen screen) => push(screen.createState());
+
+  Future<void> replaceScreen(Screen screen) => replace(screen.createState());
+
+  Future<void> push(ScreenState state) {
+    ScreenState current = history.current;
+    if (state != current) {
+      return history.push(state);
     } else {
       return Future.value(null);
     }
   }
 
-  Future<void> replace(Screen screen, {V? value}) {
-    final V v = value ?? screen.defaultValue;
-    HistoryState current = history.current;
-    if (current.screen == screen && current.value == v) {
-      return Future.value(null);
+  Future<void> replace(ScreenState state) {
+    ScreenState current = history.current;
+    if (state != current) {
+      return history.replace(state);
     } else {
-      return history
-        .replace(HistoryState(screen, v))
-        .then((value) => instance.setState(() {}));     // TODO: avoid setState
+      return Future.value(null);
     }
   }
 
   Future<bool> back() {
     return history.back().then((value) {
-      instance.setState(() {});                         // TODO: avoid setState
       return value;
     });
   }

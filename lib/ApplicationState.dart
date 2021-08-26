@@ -3,23 +3,21 @@ import 'package:foundation_flutter/MapStack.dart';
 
 import 'foundation.dart';
 
-class ApplicationState<V> extends State<Application> with HistoryListener<V> {
-  final MapStack<V> _stack = MapStack<V>();
+class ApplicationState extends State<Application> with HistoryListener {
+  final MapStack<ScreenState> _stack = MapStack<ScreenState>();
 
   @override
   void initState() {
     super.initState();
 
-    widget.screens.forEach((s) {
-      Screen<V> screen = s as Screen<V>;
-      Widget widget = screen.get(screen.defaultValue);
-      _stack.add(screen.defaultValue, widget);
-    });
+    ScreenState initial = widget.history.current;
+    _stack.add(initial, initial.screen.get(initial));
+
     widget.history.listen(this);
   }
 
   @override
-  void apply(HistoryAction action, HistoryState<V> previous, HistoryState<V> current) {
+  void apply(HistoryAction action, ScreenState previous, ScreenState current) {
     print('History: $action, previous: $previous, current: $current');
     // TODO: set _stack based on current history
   }
@@ -40,29 +38,26 @@ class ApplicationState<V> extends State<Application> with HistoryListener<V> {
     return widget.back().then((success) => !success);
   }
 
-  Screen? _previous;
-
   Widget createMain() {
-    final Screen current = widget.screen;
-    final V currentValue = widget.value;
-    final Widget currentWidget = current.get(currentValue);
-    final Direction? direction = widget.direction(_previous, current);
-    final Screen? previous = _previous;
-    bool first = previous != current;
-    if (previous != current) {    // Deactivate and Activate listeners for Screen
-      final HistoryState? previousState = widget.history.previous;
-      if (previousState != null) {
-        previousState.screen.invokeListeners(ScreenState.deactivated, null, previousState.value);
+    final ScreenState state = widget.history.current;
+    final Widget currentWidget = state.screen.get(state);
+    final ScreenState? previous = widget.history.previous;
+    final Direction? direction = widget.direction(previous?.screen, state.screen);
+    bool first = previous?.screen != state.screen;
+    if (previous != state) {    // Deactivate and Activate listeners for Screen
+      if (previous != null) {
+        previous.screen.invokeListeners(previous, ScreenStatus.deactivated, null);
       }
-      current.invokeListeners(ScreenState.activated, currentWidget, currentValue);
+      state.screen.invokeListeners(state, ScreenStatus.activated, currentWidget);
     }
-
-    _previous = current;
 
     Widget child = currentWidget;
-    if (current.includeSafeArea) {
+    if (state.screen.includeSafeArea) {
       child = SafeArea(child: child);
     }
+
+    // TODO: Export this part
+    print('createMain called! We need to potentially add the widget...');
 
     // final IndexedStack stack = IndexedStack(
     //   key: ValueKey<String>('${current.name}:$currentArgs'),
@@ -88,7 +83,8 @@ class ApplicationState<V> extends State<Application> with HistoryListener<V> {
   }
 
   Widget? bottomNavBar() {
-    final Screen screen = widget.screen;
+    final ScreenState state = widget.history.current;
+    final Screen screen = state.screen;
     final Nav? nav = screen.getNav();
     if (nav == null) {
       return null;
@@ -104,7 +100,7 @@ class ApplicationState<V> extends State<Application> with HistoryListener<V> {
       return BottomNavigationBar(
         type: BottomNavigationBarType.fixed,
         currentIndex: screens.indexOf(navScreen),
-        onTap: (index) => widget.push(screens[index]),
+        onTap: (index) => widget.push(screens[index].createState()),
         items: items
       );
     }

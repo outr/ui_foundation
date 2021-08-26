@@ -4,55 +4,53 @@ import 'package:foundation_flutter/foundation.dart';
 
 final NavBar navBar = NavBar();
 
-class Data {}
-
-class PageThreeData extends Data {
+class PageThreeData {
   final String message;
 
   PageThreeData(this.message);
 }
 
-class Screen0 extends Screen<Data> {
+class Screen0 extends Screen {
   Screen0():
-    super(name: 'Begin', defaultValue: Data());
+    super(name: 'Begin');
 
   @override
-  Widget create(Data value) => ElevatedButton(
-    onPressed: () => application.push(screen1),
+  Widget create(ScreenState state) => ElevatedButton(
+    onPressed: () => application.push(screen1.createState()),
     child: Text('Begin'),
   );
 }
 
-class Screen1 extends Screen<Data> {
+class Screen1 extends Screen {
   Screen1():
-    super(name: 'Page 1', defaultValue: Data(), includeSafeArea: false, nav: Nav('Page 1', Icons.account_circle, navBar));
+    super(name: 'Page 1', includeSafeArea: false, nav: Nav('Page 1', Icons.account_circle, navBar));
 
   @override
-  Widget create(Data value) => PageOne();
+  Widget create(ScreenState state) => PageOne();
 }
 
-class Screen2 extends Screen<Data> {
+class Screen2 extends Screen {
   Screen2():
-    super(name: 'Page 2', defaultValue: Data(), nav: Nav('Page 2', Icons.settings, navBar));
+    super(name: 'Page 2', nav: Nav('Page 2', Icons.settings, navBar));
 
   @override
-  Widget create(Data value) => PageTwo();
+  Widget create(ScreenState state) => PageTwo();
 }
 
-class Screen3 extends Screen<PageThreeData> {
+class Screen3 extends Screen {
   Screen3():
-    super(name: 'Page 3', defaultValue: PageThreeData("Default!"), nav: Nav('Page 3', Icons.nature, navBar));
+    super(name: 'Page 3', nav: Nav('Page 3', Icons.nature, navBar));
 
   @override
-  Widget create(PageThreeData value) => PageThree(data: value);
+  Widget create(ScreenState state) => PageThree(data: PageThreeData('Replace!'));
 }
 
-class Details extends Screen<Data> {
+class Details extends Screen {
   Details():
-    super(name: 'Details', defaultValue: Data(), parent: screen2);
+    super(name: 'Details', parent: screen2);
 
   @override
-  Widget create(Data value) => DetailsPage();
+  Widget create(ScreenState state) => DetailsPage();
 }
 
 final Screen0 screen0 = Screen0();
@@ -61,7 +59,7 @@ final Screen2 screen2 = Screen2();
 final Screen3 screen3 = Screen3();
 final Details details = Details();
 
-final Application<AppState, Data, MyTheme> application = Application(
+final Application<AppState, MyTheme> application = Application(
   state: AppState(),
   title: 'My Application Test',
   initialTheme: MyTheme.light,
@@ -123,12 +121,12 @@ class PageTwo extends StatelessWidget {
         child: Column(
             children: [
               ElevatedButton(
-                onPressed: () => application.push(details),
+                onPressed: () => application.pushScreen(details),
                 child: Text('Don\'t Click me'),
                 style: application.theme.specialButton,
               ),
               ElevatedButton(
-                onPressed: () => application.push(screen3, value: PageThreeData('Hello, World')),
+                onPressed: () => application.pushScreen(screen3), //, value: PageThreeData('Hello, World')),
                 child: Text('Go to Page 3'),
               ),
               ElevatedButton(
@@ -165,7 +163,7 @@ class DetailsPage extends StatelessWidget {
 }
 
 class PageThree extends StatelessWidget {
-  final Data data;
+  final PageThreeData data;
 
   const PageThree({Key? key, required this.data}) : super(key: key);
 

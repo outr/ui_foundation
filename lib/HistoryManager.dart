@@ -1,16 +1,16 @@
 import 'foundation.dart';
 
-class HistoryManager<V> {
-  final List<HistoryState<V>> _entries;
-  final List<HistoryListener<V>> _listeners = [];
+class HistoryManager {
+  final List<ScreenState> _entries;
+  final List<HistoryListener> _listeners = [];
 
-  HistoryManager(HistoryState<V> initialState):
+  HistoryManager(ScreenState initialState):
         _entries = [initialState];
 
   bool get isTop => _entries.length == 1;
 
-  HistoryState<V> get current => _entries.last;
-  HistoryState<V>? get previous {
+  ScreenState get current => _entries.last;
+  ScreenState? get previous {
     if (_entries.length > 1) {
       return _entries[_entries.length - 2];
     } else {
@@ -18,15 +18,15 @@ class HistoryManager<V> {
     }
   }
 
-  Future<void> push(HistoryState<V> state) {
-    final HistoryState<V> previous = current;
+  Future<void> push(ScreenState state) {
+    final ScreenState previous = current;
     _entries.add(state);
     _invokeListeners(HistoryAction.push, previous, state);
     return Future.value(null);
   }
 
-  Future<void> replace(HistoryState<V> state) {
-    final HistoryState<V> previous = current;
+  Future<void> replace(ScreenState state) {
+    final ScreenState previous = current;
     _entries.removeLast();
     _entries.add(state);
     _invokeListeners(HistoryAction.replace, previous, state);
@@ -37,20 +37,20 @@ class HistoryManager<V> {
     if (isTop) {
       return Future.value(false);
     }
-    final HistoryState<V> previous = _entries.removeLast();
+    final ScreenState previous = _entries.removeLast();
     _invokeListeners(HistoryAction.back, previous, current);
     return Future.value(true);
   }
 
-  void listen(HistoryListener<V> listener) {
+  void listen(HistoryListener listener) {
     _listeners.add(listener);
   }
 
-  void remove(HistoryListener<V> listener) {
+  void remove(HistoryListener listener) {
     _listeners.remove(listener);
   }
 
-  void _invokeListeners(HistoryAction action, HistoryState<V> previous, HistoryState<V> current) {
+  void _invokeListeners(HistoryAction action, ScreenState previous, ScreenState current) {
     _listeners.forEach((listener) => listener.apply(action, previous, current));
   }
 }

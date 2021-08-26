@@ -2,39 +2,39 @@ import 'package:flutter/material.dart';
 
 import 'foundation.dart';
 
-abstract class Screen<V> {
+abstract class Screen {
   final String name;
-  final V defaultValue;
   final Nav? nav;
   final Screen? parent;
   final bool includeSafeArea;
 
+  ScreenState? _state;
   Widget? _cached;
-  V? _value;
 
   final List<ScreenListener> _listeners = [];
 
   Screen({
     required this.name,
-    required this.defaultValue,
     this.nav,
     this.parent,
     bool? includeSafeArea
   }):
     this.includeSafeArea = includeSafeArea ?? true;
 
-  Widget create(covariant V value);
+  ScreenState createState() => ScreenState(this);
 
-  Widget get(covariant V value) {
-    if (_cached != null && _value == value) {
+  Widget create(ScreenState state);
+
+  Widget get(ScreenState state) {
+    if (_state == state) {
       return _cached!;
     } else {
-      Widget widget = create(value);
+      Widget widget = create(state);
       if (includeSafeArea) {
         widget = new SafeArea(child: widget);
       }
       _cached = widget;
-      _value = value;
+      _state = state;
       return widget;
     }
   }
@@ -59,8 +59,8 @@ abstract class Screen<V> {
     _listeners.remove(listener);
   }
 
-  void invokeListeners(ScreenState state, Widget? widget, V value) {
-    _listeners.forEach((listener) => listener.apply(this, state, widget, value));
+  void invokeListeners(ScreenState state, ScreenStatus status, Widget? widget) {
+    _listeners.forEach((listener) => listener.apply(state, status, widget));
   }
 
   @override
