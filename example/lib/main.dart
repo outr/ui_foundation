@@ -73,7 +73,6 @@ void main() {
 }
 
 class AppState {
-  int _counter = 0;
 }
 
 class PageOne extends StatefulWidget {
@@ -84,6 +83,8 @@ class PageOne extends StatefulWidget {
 }
 
 class PageOneState extends State<PageOne> with AutomaticKeepAliveClientMixin<PageOne> {
+  int _counter = 0;
+
   @override
   Widget build(BuildContext context) {
     super.build(context);
@@ -95,7 +96,7 @@ class PageOneState extends State<PageOne> with AutomaticKeepAliveClientMixin<Pag
       child: Column(
         children: [
           Padding(
-            child: Text('Count: ${application.state._counter}', style: Theme.of(context).textTheme.headline4),
+            child: Text('Count: $_counter', style: Theme.of(context).textTheme.headline4),
             padding: EdgeInsets.only(top: 20.0)
           ),
           ElevatedButton(onPressed: increment, child: Text("Increment"))
@@ -105,7 +106,7 @@ class PageOneState extends State<PageOne> with AutomaticKeepAliveClientMixin<Pag
   }
 
   void increment() => setState(() {
-    application.state._counter++;
+    _counter++;
   });
 
   @override

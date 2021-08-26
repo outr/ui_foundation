@@ -22,7 +22,7 @@ abstract class Screen {
     ScreenManager? manager
   }):
     this.includeSafeArea = includeSafeArea ?? true,
-    this.manager = manager ?? ScreenManager.singleton;
+    this.manager = manager ?? ScreenManager.mostRecent;
 
   ScreenState createState() => ScreenState(this);
 
