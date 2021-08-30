@@ -1,3 +1,4 @@
+import 'package:animations/animations.dart';
 import 'package:flutter/material.dart';
 
 import 'foundation.dart';
@@ -183,30 +184,49 @@ class _AnimatedIndexedStackState extends State<AnimatedIndexedStack>
       );
     } else {
       ActiveChange change = widget.stack.change!;
-      return AnimatedBuilder(
-        animation: _animation,
-        builder: (context, child) {
-          bool first = change.first;
-          // change.first = false;
-          // print('Direction? ${change.direction}, First: $first');
-          return widget.stack.application.createTransition(
-              change.previous.screen,
-              change.current.screen,
-              change.direction,
-              first,
-              child!,
-              _animation
+      /*return PageTransitionSwitcher(
+        duration: Duration(milliseconds: 550),
+        transitionBuilder: (child, primaryAnimation, secondaryAnimation) {
+          return SharedAxisTransition(
+            child: child,
+            animation: primaryAnimation,
+            secondaryAnimation: secondaryAnimation,
+            transitionType: SharedAxisTransitionType.horizontal,
           );
-          // return FadeTransition(
-          //     opacity: _animation,
-          //     child: child
-          // );
         },
         child: IndexedStack(
           index: _index,
           children: widget.children,
-        ),
+        )
+      );*/
+      bool first = change.first;
+      change.first = false;
+      print('Direction? ${change.direction}, First: $first');
+      IndexedStack stack = IndexedStack(
+        index: _index,
+        children: widget.children,
       );
+      Widget transition = widget.stack.application.createTransition(
+          change.previous.screen,
+          change.current.screen,
+          change.direction,
+          first,
+          stack,
+          _animation
+      );
+      // return AnimatedBuilder(
+      //   animation: _animation,
+      //   builder: (context, child) => child!,
+      //   child: transition
+      // );
+      return transition;
+      // return AnimatedSwitcher(
+      //     transitionBuilder: (Widget child, Animation<double> animation) {
+      //       return transition;
+      //     },
+      //     duration: Duration(milliseconds: 500),
+      //     child: transition
+      // );
     }
   }
 }
