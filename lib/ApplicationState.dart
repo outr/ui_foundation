@@ -25,25 +25,22 @@ class ApplicationState extends State<Application> with HistoryListener {
     if (!stack.contains(current)) {
       stack.add(current, current.screen.get(current));
     }
-    setState(() {
-      current.screen.manager.activating(this, current);
-      final Direction? direction = widget.direction(previous.screen, current.screen);
-      bool first = previous.screen != current.screen;
-      stack.activate(ActiveChange(previous, current, direction, first));
-    });
+    current.screen.manager.activating(this, current);
+    final Direction? direction =
+        widget.direction(previous.screen, current.screen);
+    bool first = previous.screen != current.screen;
+    stack.activate(ActiveChange(previous, current, direction, first));
   }
 
   @override
   Widget build(BuildContext context) => MaterialApp(
-    title: widget.title,
-    navigatorKey: Application.navKey,
-    theme: widget.theme.data(),
-    debugShowCheckedModeBanner: false,
-    home: WillPopScope(
-      onWillPop: _willPop,
-      child: widget.createHomeWidget()
-    )
-  );
+        title: widget.title,
+        navigatorKey: Application.navKey,
+        theme: widget.theme.data(),
+        debugShowCheckedModeBanner: false,
+        home:
+            WillPopScope(onWillPop: _willPop, child: widget.createHomeWidget()),
+      );
 
   Future<bool> _willPop() async {
     return widget.back().then((success) => !success);
@@ -53,11 +50,14 @@ class ApplicationState extends State<Application> with HistoryListener {
     final ScreenState state = widget.history.current;
     final Widget currentWidget = state.screen.get(state);
     final ScreenState? previous = widget.history.previous;
-    if (previous != state) {    // Deactivate and Activate listeners for Screen
+    if (previous != state) {
+      // Deactivate and Activate listeners for Screen
       if (previous != null) {
-        previous.screen.invokeListeners(previous, ScreenStatus.deactivated, null);
+        previous.screen
+            .invokeListeners(previous, ScreenStatus.deactivated, null);
       }
-      state.screen.invokeListeners(state, ScreenStatus.activated, currentWidget);
+      state.screen
+          .invokeListeners(state, ScreenStatus.activated, currentWidget);
     }
 
     // final IndexedStack stack = IndexedStack(
@@ -98,12 +98,13 @@ class ApplicationState extends State<Application> with HistoryListener {
           .map((s) => BottomNavigationBarItem(
               icon: Icon(s.nav!.icon, size: 30), label: s.nav!.label))
           .toList(growable: false);
-      return BottomNavigationBar(
-        type: BottomNavigationBarType.fixed,
-        currentIndex: screens.indexOf(navScreen),
-        onTap: (index) => widget.push(screens[index].createState()),
-        items: items
-      );
+      BottomNavigationBar bottomBar = BottomNavigationBar(
+          type: BottomNavigationBarType.fixed,
+          currentIndex: screens.indexOf(navScreen),
+          onTap: (index) => widget.push(screens[index].createState()),
+          items: items);
+
+      return bottomBar;
     }
   }
 }
