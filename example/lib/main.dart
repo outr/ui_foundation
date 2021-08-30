@@ -10,56 +10,15 @@ class PageThreeData {
   PageThreeData(this.message);
 }
 
-class Screen0 extends Screen {
-  Screen0():
-    super(name: 'Begin');
+final Screen screen0 = Screen(name: "Begin", create: (state) => ElevatedButton(
+  onPressed: () => application.push(screen1.createState()),
+  child: Text('Begin'),
+));
 
-  @override
-  Widget create(ScreenState state) => ElevatedButton(
-    onPressed: () => application.push(screen1.createState()),
-    child: Text('Begin'),
-  );
-}
-
-class Screen1 extends Screen {
-  Screen1():
-    super(name: 'Page 1', includeSafeArea: false, nav: Nav('Page 1', Icons.account_circle, navBar));
-
-  @override
-  Widget create(ScreenState state) => PageOne();
-}
-
-class Screen2 extends Screen {
-  Screen2():
-    super(name: 'Page 2', nav: Nav('Page 2', Icons.settings, navBar));
-
-  @override
-  Widget create(ScreenState state) => PageTwo();
-}
-
-class Screen3 extends TypedScreen<PageThreeData> {
-  Screen3():
-    super(name: 'Page 3', defaultValue: PageThreeData('Default!'), nav: Nav('Page 3', Icons.nature, navBar));
-
-  @override
-  Widget createTyped(TypedScreenState<PageThreeData> state) {
-    return PageThree(data: state.value);
-  }
-}
-
-class Details extends Screen {
-  Details():
-    super(name: 'Details', parent: screen2);
-
-  @override
-  Widget create(ScreenState state) => DetailsPage();
-}
-
-final Screen0 screen0 = Screen0();
-final Screen1 screen1 = Screen1();
-final Screen2 screen2 = Screen2();
-final Screen3 screen3 = Screen3();
-final Details details = Details();
+final Screen screen1 = Screen(name: "Page 1", includeSafeArea: false, nav: Nav('Page 1', Icons.account_circle, navBar), create: (state) => PageOne());
+final Screen screen2 = Screen(name: "Page 2", nav: Nav('Page 2', Icons.settings, navBar), create: (state) => PageTwo());
+final TypedScreen<PageThreeData> screen3 = TypedScreen(name: "Page 3", defaultValue: PageThreeData('Default!'), nav: Nav('Page 3', Icons.nature, navBar), createTyped: (state) => PageThree(data: state.value));
+final Screen details = Screen(name: "Details", parent: screen2, create: (state) => DetailsPage());
 
 final Application<AppState, MyTheme> application = Application(
   state: AppState(),
@@ -77,9 +36,7 @@ class AppState {
 
 class PageOne extends StatefulWidget {
   @override
-  State createState() {
-    return PageOneState();
-  }
+  State createState() => PageOneState();
 }
 
 class PageOneState extends State<PageOne> with AutomaticKeepAliveClientMixin<PageOne> {

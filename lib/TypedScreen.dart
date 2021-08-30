@@ -2,17 +2,19 @@ import 'package:flutter/material.dart';
 
 import 'foundation.dart';
 
-abstract class TypedScreen<V> extends Screen {
+class TypedScreen<V> extends Screen {
   final V defaultValue;
+  final Widget Function(TypedScreenState<V>) createTyped;
 
   TypedScreen({
     required String name,
     required this.defaultValue,
+    required this.createTyped,
     Nav? nav,
     Screen? parent,
     bool? includeSafeArea
   }):
-        super(name: name, nav: nav, parent: parent, includeSafeArea: includeSafeArea);
+    super(name: name, create: (state) => createTyped(state as TypedScreenState<V>), nav: nav, parent: parent, includeSafeArea: includeSafeArea);
 
   @override
   ScreenState createState() => createTypedState(defaultValue);
@@ -27,9 +29,4 @@ abstract class TypedScreen<V> extends Screen {
   }
 
   ScreenState createTypedState(V value) => TypedScreenState<V>(this, value);
-
-  @override
-  Widget create(ScreenState state) => createTyped(state as TypedScreenState<V>);
-
-  Widget createTyped(TypedScreenState<V> state);
 }

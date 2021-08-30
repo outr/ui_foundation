@@ -2,12 +2,13 @@ import 'package:flutter/material.dart';
 
 import 'foundation.dart';
 
-abstract class Screen {
+class Screen {
   final String name;
   final Nav? nav;
   final Screen? parent;
   final bool includeSafeArea;
   final ScreenManager manager;
+  final Widget Function(ScreenState) create;
 
   ScreenState? _state;
   Widget? _cached;
@@ -16,6 +17,7 @@ abstract class Screen {
 
   Screen({
     required this.name,
+    required this.create,
     this.nav,
     this.parent,
     bool? includeSafeArea,
@@ -27,8 +29,6 @@ abstract class Screen {
   ScreenState createState() => ScreenState(this);
 
   bool isDefaultState(ScreenState state) => true;
-
-  Widget create(ScreenState state);
 
   Widget get(ScreenState state) {
     if (_state == state) {
