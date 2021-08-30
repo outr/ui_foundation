@@ -11,7 +11,7 @@ class PageThreeData {
 }
 
 final Screen screen0 = Screen(name: "Begin", create: (state) => ElevatedButton(
-  onPressed: () => application.push(screen1.createState()),
+  onPressed: () => application.pushScreen(screen1),
   child: Text('Begin'),
 ));
 
@@ -56,7 +56,8 @@ class PageOneState extends State<PageOne> with AutomaticKeepAliveClientMixin<Pag
             child: Text('Count: $_counter', style: Theme.of(context).textTheme.headline4),
             padding: EdgeInsets.only(top: 20.0)
           ),
-          ElevatedButton(onPressed: increment, child: Text("Increment"))
+          ElevatedButton(onPressed: increment, child: Text("Increment")),
+          ElevatedButton(onPressed: () => application.pushScreen(screen0), child: Text('Go to Begin'))
         ],
       )
     );

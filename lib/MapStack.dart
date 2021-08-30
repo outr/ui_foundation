@@ -177,32 +177,25 @@ class _AnimatedIndexedStackState extends State<AnimatedIndexedStack>
 
   @override
   Widget build(BuildContext context) {
-    if (widget.stack.change == null) {
-      return IndexedStack(
-        index: _index,
-        children: widget.children,
-      );
-    } else {
-      ActiveChange change = widget.stack.change!;
-      bool first = change.first;
-      change.first = false;
-      IndexedStack stack = IndexedStack(
-        index: _index,
-        children: widget.children,
-      );
-      Widget transition = widget.stack.application.createTransition(
-          change.previous.screen,
-          change.current.screen,
-          change.direction,
-          first,
-          stack,
-          _animation
-      );
-      if (!first) {
-        // Deactivate the previous screen
-        change.previous.screen.manager.deactivating(widget.stack.appState, change.previous);
-      }
-      return transition;
+    IndexedStack stack = IndexedStack(
+      index: _index,
+      children: widget.children,
+    );
+    ActiveChange? change = widget.stack.change;
+    bool first = change?.first ?? true;
+    change?.first = false;
+    Widget transition = widget.stack.application.createTransition(
+        change?.previous.screen,
+        change?.current.screen ?? widget.stack.application.history.current.screen,
+        change?.direction,
+        first,
+        stack,
+        _animation
+    );
+    if (!first) {
+      // Deactivate the previous screen
+      change?.previous.screen.manager.deactivating(widget.stack.appState, change.previous);
     }
+    return transition;
   }
 }
