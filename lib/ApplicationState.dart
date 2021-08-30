@@ -25,11 +25,13 @@ class ApplicationState extends State<Application> with HistoryListener {
     if (!stack.contains(current)) {
       stack.add(current, current.screen.get(current));
     }
-    current.screen.manager.activating(this, current);
-    final Direction? direction =
-        widget.direction(previous.screen, current.screen);
-    bool first = previous.screen != current.screen;
-    stack.activate(ActiveChange(previous, current, direction, first));
+    setState(() {
+      current.screen.manager.activating(this, current);
+      final Direction? direction =
+          widget.direction(previous.screen, current.screen);
+      bool first = previous.screen != current.screen;
+      stack.activate(ActiveChange(previous, current, direction, first));
+    });
   }
 
   @override
@@ -54,31 +56,11 @@ class ApplicationState extends State<Application> with HistoryListener {
       // Deactivate and Activate listeners for Screen
       if (previous != null) {
         previous.screen
-            .invokeListeners(previous, ScreenStatus.deactivated, null);
+          .invokeListeners(previous, ScreenStatus.deactivated, null);
       }
       state.screen
-          .invokeListeners(state, ScreenStatus.activated, currentWidget);
+        .invokeListeners(state, ScreenStatus.activated, currentWidget);
     }
-
-    // final IndexedStack stack = IndexedStack(
-    //   key: ValueKey<String>('${current.name}:$currentArgs'),
-    //   children: [],
-    // )
-
-    /*return AnimatedSwitcher(
-      transitionBuilder: (Widget child, Animation<double> animation) {
-        final Widget transition = widget.createTransition(previous, current, direction, first, child, animation);
-        first = false;
-        return transition;
-      },
-      duration: widget.getTransitionDuration(previous, current, direction),
-      child: Container(
-        key: ValueKey<String>('${current.name}:$currentArgs'),
-        child: child,
-      )
-    );*/
-
-    // return child;
 
     return stack;
   }

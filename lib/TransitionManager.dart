@@ -17,6 +17,7 @@ class _StandardTransitionManager extends TransitionManager {
       return createMoveTransition(direction, firstWidget, child, animation);
     } else {
       return FadeTransition(opacity: animation, child: child);
+      // return createMoveTransition(Direction.forward, firstWidget, child, animation);
     }
     // return ScaleTransition(child: child, scale: animation);
   }
