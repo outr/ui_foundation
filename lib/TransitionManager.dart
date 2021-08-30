@@ -31,7 +31,6 @@ class _StandardTransitionManager extends TransitionManager {
     } else if (direction == Direction.back && !firstWidget) {
       beginX = -1.0;
     }
-    print('CreateMove: $direction, first: $firstWidget, Begin: $beginX');
     return ClipRect(
       child: SlideTransition(
         position: Tween<Offset>(begin: Offset(beginX, 0.0), end: Offset(0.0, 0.0)).animate(animation),

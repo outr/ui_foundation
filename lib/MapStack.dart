@@ -15,28 +15,28 @@ class ActiveChange {
   String toString() => "ActiveChange(previous: $previous, current: $current, direction: $direction, first: $first)";
 }
 
-// TODO: Support customized animations
 class MapStack extends StatefulWidget {
   final List<ScreenState> _keys = [];
   final List<Widget> _widgets = [];
 
-  Application application;
+  final ApplicationState appState;
+  final Application application;
+
   ActiveChange? change;
   ScreenState? _active;
   MapStackState? _instance;
 
-  MapStack(this.application);
+  MapStack(this.appState):
+    application = appState.widget;
 
   ScreenState get active => _active!;
   set active(ScreenState state) {
     _instance?.index = _keys.indexOf(state);
   }
 
-  Future<void> activate(ActiveChange change) {
+  void activate(ActiveChange change) {
     this.change = change;
     active = change.current;
-    // TODO: fix
-    return Future.value(null);
   }
 
   List<ScreenState> get keys => _keys.toList(growable: false);
@@ -118,6 +118,7 @@ class MapStackState extends State<MapStack> with TickerProviderStateMixin {
   );
 }
 
+// TODO: Remove AnimatedIndexedStack in favor of Stack so we don't have to animate one widget off-screen before animating the one on
 class AnimatedIndexedStack extends StatefulWidget {
   final MapStack stack;
   final int index;
@@ -143,7 +144,7 @@ class _AnimatedIndexedStackState extends State<AnimatedIndexedStack>
   void initState() {
     _controller = AnimationController(
       vsync: this,
-      duration: Duration(milliseconds: 450),
+      duration: Duration(milliseconds: 200),
     );
     _animation = Tween(begin: 0.0, end: 1.0).animate(
       CurvedAnimation(
@@ -176,7 +177,6 @@ class _AnimatedIndexedStackState extends State<AnimatedIndexedStack>
 
   @override
   Widget build(BuildContext context) {
-    print('Change? ${widget.stack.change}');
     if (widget.stack.change == null) {
       return IndexedStack(
         index: _index,
@@ -184,24 +184,8 @@ class _AnimatedIndexedStackState extends State<AnimatedIndexedStack>
       );
     } else {
       ActiveChange change = widget.stack.change!;
-      /*return PageTransitionSwitcher(
-        duration: Duration(milliseconds: 550),
-        transitionBuilder: (child, primaryAnimation, secondaryAnimation) {
-          return SharedAxisTransition(
-            child: child,
-            animation: primaryAnimation,
-            secondaryAnimation: secondaryAnimation,
-            transitionType: SharedAxisTransitionType.horizontal,
-          );
-        },
-        child: IndexedStack(
-          index: _index,
-          children: widget.children,
-        )
-      );*/
       bool first = change.first;
       change.first = false;
-      print('Direction? ${change.direction}, First: $first');
       IndexedStack stack = IndexedStack(
         index: _index,
         children: widget.children,
@@ -214,19 +198,11 @@ class _AnimatedIndexedStackState extends State<AnimatedIndexedStack>
           stack,
           _animation
       );
-      // return AnimatedBuilder(
-      //   animation: _animation,
-      //   builder: (context, child) => child!,
-      //   child: transition
-      // );
+      if (!first) {
+        // Deactivate the previous screen
+        change.previous.screen.manager.deactivating(widget.stack.appState, change.previous);
+      }
       return transition;
-      // return AnimatedSwitcher(
-      //     transitionBuilder: (Widget child, Animation<double> animation) {
-      //       return transition;
-      //     },
-      //     duration: Duration(milliseconds: 500),
-      //     child: transition
-      // );
     }
   }
 }
