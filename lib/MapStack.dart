@@ -1,25 +1,48 @@
-import 'dart:collection';
-
 import 'package:flutter/material.dart';
 
+import 'foundation.dart';
+
+class ActiveChange {
+  final ScreenState previous;
+  final ScreenState current;
+  final Direction? direction;
+  bool first;
+
+  ActiveChange(this.previous, this.current, this.direction, this.first);
+
+  @override
+  String toString() => "ActiveChange(previous: $previous, current: $current, direction: $direction, first: $first)";
+}
+
 // TODO: Support customized animations
-class MapStack<T> extends StatefulWidget {
-  final List<T> _keys = [];
+class MapStack extends StatefulWidget {
+  final List<ScreenState> _keys = [];
   final List<Widget> _widgets = [];
 
-  T? _active;
+  Application application;
+  ActiveChange? change;
+  ScreenState? _active;
   MapStackState? _instance;
 
-  T get active => _active!;
-  set active(T t) {
-    _instance?.index = _keys.indexOf(t);
+  MapStack(this.application);
+
+  ScreenState get active => _active!;
+  set active(ScreenState state) {
+    _instance?.index = _keys.indexOf(state);
   }
 
-  List<T> get keys => _keys.toList(growable: false);
+  Future<void> activate(ActiveChange change) {
+    this.change = change;
+    active = change.current;
+    // TODO: fix
+    return Future.value(null);
+  }
 
-  bool contains(T t) => _keys.contains(t);
+  List<ScreenState> get keys => _keys.toList(growable: false);
 
-  void add(T key, Widget widget) {
+  bool contains(ScreenState state) => _keys.contains(state);
+
+  void add(ScreenState key, Widget widget) {
     if (_instance != null) {
       _instance!.setState(() {
         _add(key, widget);
@@ -32,7 +55,7 @@ class MapStack<T> extends StatefulWidget {
     }
   }
 
-  Widget? remove(T key) {
+  Widget? remove(ScreenState key) {
     if (_instance != null) {
       Widget? w;
       _instance!.setState(() {
@@ -44,12 +67,12 @@ class MapStack<T> extends StatefulWidget {
     }
   }
 
-  void _add(T key, Widget widget) {
+  void _add(ScreenState key, Widget widget) {
     _keys.add(key);
     _widgets.add(widget);
   }
 
-  Widget? _remove(T key) {
+  Widget? _remove(ScreenState key) {
     int index = _keys.indexOf(key);
     if (index != -1) {
       _keys.remove(key);
@@ -88,16 +111,19 @@ class MapStackState extends State<MapStack> with TickerProviderStateMixin {
 
   @override
   Widget build(BuildContext context) => AnimatedIndexedStack(
+      stack: widget,
       index: _index,
       children: widget._widgets
   );
 }
 
 class AnimatedIndexedStack extends StatefulWidget {
+  final MapStack stack;
   final int index;
   final List<Widget> children;
 
   const AnimatedIndexedStack({
+    required this.stack,
     required this.index,
     required this.children,
   });
@@ -149,18 +175,38 @@ class _AnimatedIndexedStackState extends State<AnimatedIndexedStack>
 
   @override
   Widget build(BuildContext context) {
-    return AnimatedBuilder(
-      animation: _animation,
-      builder: (context, child) {
-        return FadeTransition(
-            opacity: _animation,
-            child: child
-        );
-      },
-      child: IndexedStack(
+    print('Change? ${widget.stack.change}');
+    if (widget.stack.change == null) {
+      return IndexedStack(
         index: _index,
         children: widget.children,
-      ),
-    );
+      );
+    } else {
+      ActiveChange change = widget.stack.change!;
+      return AnimatedBuilder(
+        animation: _animation,
+        builder: (context, child) {
+          bool first = change.first;
+          // change.first = false;
+          // print('Direction? ${change.direction}, First: $first');
+          return widget.stack.application.createTransition(
+              change.previous.screen,
+              change.current.screen,
+              change.direction,
+              first,
+              child!,
+              _animation
+          );
+          // return FadeTransition(
+          //     opacity: _animation,
+          //     child: child
+          // );
+        },
+        child: IndexedStack(
+          index: _index,
+          children: widget.children,
+        ),
+      );
+    }
   }
 }

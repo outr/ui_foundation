@@ -5,13 +5,26 @@ abstract class ScreenManager {
 
   void deactivating(ApplicationState appState, ScreenState state);
 
+  /// Only keeps the default state and removes all others
+  static final ScreenManager keepDefault = KeepDefaultScreenManager();
+
   /// Only keeps a single instance that is the last activated state of the screen.
   static final ScreenManager mostRecent = MostRecentScreenManager();
 
   /// Removes states after they are deactivated.
   static final ScreenManager onlyActive = OnlyActiveScreenManager();
+}
 
-  // TODO: keepDefault to only cache the default state of the screen
+class KeepDefaultScreenManager extends ScreenManager {
+  @override
+  void activating(ApplicationState appState, ScreenState state) {}
+
+  @override
+  void deactivating(ApplicationState appState, ScreenState state) {
+    if (!state.screen.isDefaultState(state)) {
+      appState.stack.remove(state);
+    }
+  }
 }
 
 class MostRecentScreenManager extends ScreenManager {

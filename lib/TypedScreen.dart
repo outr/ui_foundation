@@ -17,6 +17,15 @@ abstract class TypedScreen<V> extends Screen {
   @override
   ScreenState createState() => createTypedState(defaultValue);
 
+  @override
+  bool isDefaultState(ScreenState state) {
+    if (state is TypedScreenState && state.value == defaultValue) {
+      return true;
+    } else {
+      return false;
+    }
+  }
+
   ScreenState createTypedState(V value) => TypedScreenState<V>(this, value);
 
   @override

@@ -26,6 +26,8 @@ abstract class Screen {
 
   ScreenState createState() => ScreenState(this);
 
+  bool isDefaultState(ScreenState state) => true;
+
   Widget create(ScreenState state);
 
   Widget get(ScreenState state) {

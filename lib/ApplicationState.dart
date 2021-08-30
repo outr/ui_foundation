@@ -4,11 +4,13 @@ import 'package:foundation_flutter/MapStack.dart';
 import 'foundation.dart';
 
 class ApplicationState extends State<Application> with HistoryListener {
-  final MapStack<ScreenState> stack = MapStack<ScreenState>();
+  late final MapStack stack;
 
   @override
   void initState() {
     super.initState();
+
+    stack = MapStack(widget);
 
     ScreenState initial = widget.history.current;
     stack.add(initial, initial.screen.get(initial));
@@ -30,9 +32,12 @@ class ApplicationState extends State<Application> with HistoryListener {
       print('State already added.');
     }
     setState(() {
-      previous.screen.manager.deactivating(this, previous);
       current.screen.manager.activating(this, current);
-      stack.active = current;
+      final Direction? direction = widget.direction(previous.screen, current.screen);
+      bool first = previous.screen != current.screen;
+      stack.activate(ActiveChange(previous, current, direction, first));
+      // TODO: deactivate after activate animation is finished
+      // previous.screen.manager.deactivating(this, previous);
     });
   }
 
@@ -56,8 +61,6 @@ class ApplicationState extends State<Application> with HistoryListener {
     final ScreenState state = widget.history.current;
     final Widget currentWidget = state.screen.get(state);
     final ScreenState? previous = widget.history.previous;
-    final Direction? direction = widget.direction(previous?.screen, state.screen);
-    bool first = previous?.screen != state.screen;
     if (previous != state) {    // Deactivate and Activate listeners for Screen
       if (previous != null) {
         previous.screen.invokeListeners(previous, ScreenStatus.deactivated, null);
