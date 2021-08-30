@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:foundation_flutter/MapStack.dart';
+import 'package:badges/badges.dart';
 
 import 'foundation.dart';
 
@@ -78,7 +79,9 @@ class ApplicationState extends State<Application> with HistoryListener {
           widget.screens.where((s) => s.hasNavBar(bar)).toList(growable: false);
       final List<BottomNavigationBarItem> items = screens
           .map((s) => BottomNavigationBarItem(
-              icon: Icon(s.nav!.icon, size: 30), label: s.nav!.label))
+              label: s.nav!.label,
+              icon: widget.createNavIcon(s.nav!)
+          ))
           .toList(growable: false);
       BottomNavigationBar bottomBar = BottomNavigationBar(
           type: BottomNavigationBarType.fixed,

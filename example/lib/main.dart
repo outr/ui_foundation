@@ -3,6 +3,8 @@ import 'package:foundation_flutter/foundation.dart';
 
 final NavBar navBar = NavBar();
 
+final Nav screen1Nav = Nav('Page 1', Icons.account_circle, navBar);
+
 class PageThreeData {
   final String message;
 
@@ -21,7 +23,7 @@ final Screen screen0 = Screen(
 final Screen screen1 = Screen(
   name: "Page 1",
   includeSafeArea: false,
-  nav: Nav('Page 1', Icons.account_circle, navBar),
+  nav: screen1Nav,
   create: (state) => PageOne(),
 );
 final Screen screen2 = Screen(
@@ -86,8 +88,9 @@ class PageOneState extends State<PageOne>
   }
 
   void increment() => setState(() {
-        _counter++;
-      });
+    _counter++;
+    application.setNavBadge(screen1Nav, _counter);
+  });
 
   @override
   bool get wantKeepAlive => true;

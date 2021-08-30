@@ -1,3 +1,6 @@
+import 'dart:collection';
+
+import 'package:badges/badges.dart';
 import 'package:flutter/material.dart';
 
 import 'foundation.dart';
@@ -11,6 +14,7 @@ class Application<S, T extends AbstractTheme> extends StatefulWidget {
   final List<Screen> screens;
   final HistoryManager history;
 
+  HashMap<Nav, int> navBadges = HashMap();
   T _theme;
 
   T get theme => _theme;
@@ -73,6 +77,25 @@ class Application<S, T extends AbstractTheme> extends StatefulWidget {
 
   Duration getTransitionDuration(Screen? previous, Screen current, Direction? direction) {
     return transitionManager.duration(previous, current, direction);
+  }
+
+  void setNavBadge(Nav nav, int value) => instance.setState(() {
+    navBadges[nav] = value;
+  });
+
+  Widget createNavIcon(Nav nav) {
+    int value = navBadges[nav] ?? 0;
+    Icon icon = Icon(nav.icon, size: 30);
+    if (value == 0) {
+      return icon;
+    } else {
+      return Badge(
+        child: icon,
+        shape: BadgeShape.circle,
+        borderRadius: BorderRadius.circular(100),
+        badgeContent: Text("$value", style: TextStyle(color: Colors.white)),
+      );
+    }
   }
 
   void reloadAll() {
