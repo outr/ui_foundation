@@ -16,7 +16,20 @@ class _StandardTransitionManager extends TransitionManager {
     if (direction != null && current.nav != null) {
       return createMoveTransition(direction, firstWidget, child, animation);
     } else {
-      return FadeTransition(opacity: animation, child: child);
+      // return FadeTransition(opacity: animation, child: child);
+      // return createMoveTransition(Direction.forward, firstWidget, child, animation);
+      return ClipRect(
+          child: FadeTransition(
+            opacity: animation,
+            child: SlideTransition(
+              position: Tween<Offset>(begin: Offset(0.0, 0.0), end: Offset(0.0, 0.0)).animate(animation),
+              child: Padding(
+                padding: const EdgeInsets.all(0.0),
+                child: child,
+              ),
+            ),
+          )
+      );
     }
     // return ScaleTransition(child: child, scale: animation);
   }
@@ -32,13 +45,16 @@ class _StandardTransitionManager extends TransitionManager {
       beginX = -1.0;
     }
     return ClipRect(
-      child: SlideTransition(
-        position: Tween<Offset>(begin: Offset(beginX, 0.0), end: Offset(0.0, 0.0)).animate(animation),
-        child: Padding(
-          padding: const EdgeInsets.all(0.0),
-          child: child,
+      child: FadeTransition(
+        opacity: Tween<double>(begin: 1.0, end: 1.0).animate(animation),
+        child: SlideTransition(
+          position: Tween<Offset>(begin: Offset(beginX, 0.0), end: Offset(0.0, 0.0)).animate(animation),
+          child: Padding(
+            padding: const EdgeInsets.all(0.0),
+            child: child,
+          ),
         ),
-      ),
+      )
     );
   }
 }

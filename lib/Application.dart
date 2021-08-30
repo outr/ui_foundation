@@ -1,3 +1,6 @@
+import 'dart:collection';
+
+import 'package:badges/badges.dart';
 import 'package:flutter/material.dart';
 
 import 'foundation.dart';
@@ -11,10 +14,8 @@ class Application<S, T extends AbstractTheme> extends StatefulWidget {
   final List<Screen> screens;
   final HistoryManager history;
 
+  HashMap<Nav, int> navBadges = HashMap();
   T _theme;
-
-  Screen get screen => history.current.screen;
-  Arguments get args => history.current.args;
 
   T get theme => _theme;
   set theme(T theme) {
@@ -34,7 +35,7 @@ class Application<S, T extends AbstractTheme> extends StatefulWidget {
     Widget Function()? createHomeWidget,
     TransitionManager? transitionManager
   }):
-      history = HistoryManager(HistoryState(initialScreen ?? screens.first, Arguments.empty)),
+      history = HistoryManager((initialScreen ?? screens.first).createState()),
       _theme = initialTheme,
       this.createHomeWidget = createHomeWidget ?? (() => Home()),
       this.transitionManager = transitionManager ?? TransitionManager.standard;
@@ -42,33 +43,30 @@ class Application<S, T extends AbstractTheme> extends StatefulWidget {
   @override
   State createState() => ApplicationState();
 
-  Future<void> push(Screen screen, {Arguments? args}) {
-    final Arguments arguments = args ?? Arguments.empty;
-    HistoryState current = history.current;
-    if (current.screen != screen || current.args != arguments) {
-      return history
-        .push(HistoryState(screen, arguments))
-        .then((value) => instance.setState(() {}));
+  Future<void> pushScreen(Screen screen) => push(screen.createState());
+
+  Future<void> replaceScreen(Screen screen) => replace(screen.createState());
+
+  Future<void> push(ScreenState state) {
+    ScreenState current = history.current;
+    if (state != current) {
+      return history.push(state);
     } else {
       return Future.value(null);
     }
   }
 
-  Future<void> replace(Screen screen, {Arguments? args}) {
-    final Arguments arguments = args ?? Arguments.empty;
-    HistoryState current = history.current;
-    if (current.screen == screen && current.args == arguments) {
-      return Future.value(null);
+  Future<void> replace(ScreenState state) {
+    ScreenState current = history.current;
+    if (state != current) {
+      return history.replace(state);
     } else {
-      return history
-        .replace(HistoryState(screen, args ?? Arguments.empty))
-        .then((value) => instance.setState(() {}));
+      return Future.value(null);
     }
   }
 
   Future<bool> back() {
     return history.back().then((value) {
-      instance.setState(() {});
       return value;
     });
   }
@@ -79,6 +77,25 @@ class Application<S, T extends AbstractTheme> extends StatefulWidget {
 
   Duration getTransitionDuration(Screen? previous, Screen current, Direction? direction) {
     return transitionManager.duration(previous, current, direction);
+  }
+
+  void setNavBadge(Nav nav, int value) => instance.setState(() {
+    navBadges[nav] = value;
+  });
+
+  Widget createNavIcon(Nav nav) {
+    int value = navBadges[nav] ?? 0;
+    Icon icon = Icon(nav.icon, size: 30);
+    if (value == 0) {
+      return icon;
+    } else {
+      return Badge(
+        child: icon,
+        shape: BadgeShape.circle,
+        borderRadius: BorderRadius.circular(100),
+        badgeContent: Text("$value", style: TextStyle(color: Colors.white)),
+      );
+    }
   }
 
   void reloadAll() {

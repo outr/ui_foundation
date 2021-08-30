@@ -6,8 +6,12 @@ class Screen {
   final String name;
   final Nav? nav;
   final Screen? parent;
-  final Widget Function(Arguments) create;
   final bool includeSafeArea;
+  final ScreenManager manager;
+  final Widget Function(ScreenState) create;
+
+  ScreenState? _state;
+  Widget? _cached;
 
   final List<ScreenListener> _listeners = [];
 
@@ -16,11 +20,29 @@ class Screen {
     required this.create,
     this.nav,
     this.parent,
-    bool? includeSafeArea
+    bool? includeSafeArea,
+    ScreenManager? manager
   }):
-    this.includeSafeArea = includeSafeArea ?? true;
+    this.includeSafeArea = includeSafeArea ?? true,
+    this.manager = manager ?? ScreenManager.mostRecent;
 
-  Widget get(Arguments args) => create(args);
+  ScreenState createState() => ScreenState(this);
+
+  bool isDefaultState(ScreenState state) => true;
+
+  Widget get(ScreenState state) {
+    if (_state == state) {
+      return _cached!;
+    } else {
+      Widget widget = create(state);
+      if (includeSafeArea) {
+        widget = new SafeArea(child: widget);
+      }
+      _cached = widget;
+      _state = state;
+      return widget;
+    }
+  }
 
   Nav? getNav() => nav ?? parent?.getNav();
 
@@ -42,8 +64,8 @@ class Screen {
     _listeners.remove(listener);
   }
 
-  void invokeListeners(ScreenState state, Widget? widget, Arguments args) {
-    _listeners.forEach((listener) => listener.apply(this, state, widget, args));
+  void invokeListeners(ScreenState state, ScreenStatus status, Widget? widget) {
+    _listeners.forEach((listener) => listener.apply(state, status, widget));
   }
 
   @override

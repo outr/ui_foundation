@@ -2,6 +2,6 @@ import 'package:flutter/material.dart';
 
 import 'foundation.dart';
 
-abstract class ScreenListener {
-  void apply(Screen screen, ScreenState state, Widget? widget, Arguments args);
+abstract class ScreenListener<V> {
+  void apply(ScreenState state, ScreenStatus status, Widget? widget);
 }

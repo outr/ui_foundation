@@ -1,64 +1,74 @@
 import 'package:flutter/material.dart';
+import 'package:foundation_flutter/MapStack.dart';
+import 'package:badges/badges.dart';
 
 import 'foundation.dart';
 
-class ApplicationState extends State<Application> {
+class ApplicationState extends State<Application> with HistoryListener {
+  late final MapStack stack;
+
+  @override
+  void initState() {
+    super.initState();
+
+    stack = MapStack(this);
+
+    ScreenState initial = widget.history.current;
+    stack.add(initial, initial.screen.get(initial));
+    initial.screen.manager.activating(this, initial);
+    stack.active = initial;
+
+    widget.history.listen(this);
+  }
+
+  @override
+  void apply(HistoryAction action, ScreenState previous, ScreenState current) {
+    if (!stack.contains(current)) {
+      stack.add(current, current.screen.get(current));
+    }
+    setState(() {
+      current.screen.manager.activating(this, current);
+      final Direction? direction =
+          widget.direction(previous.screen, current.screen);
+      bool first = previous.screen != current.screen;
+      stack.activate(ActiveChange(previous, current, direction, first));
+    });
+  }
+
   @override
   Widget build(BuildContext context) => MaterialApp(
-    title: widget.title,
-    navigatorKey: Application.navKey,
-    theme: widget.theme.data(),
-    debugShowCheckedModeBanner: false,
-    home: WillPopScope(
-      onWillPop: _willPop,
-      child: widget.createHomeWidget()
-    )
-  );
+        title: widget.title,
+        navigatorKey: Application.navKey,
+        theme: widget.theme.data(),
+        debugShowCheckedModeBanner: false,
+        home:
+            WillPopScope(onWillPop: _willPop, child: widget.createHomeWidget()),
+      );
 
   Future<bool> _willPop() async {
     return widget.back().then((success) => !success);
   }
 
-  Screen? _previous;
-
   Widget createMain() {
-    final Screen current = widget.screen;
-    final Arguments currentArgs = widget.args;
-    final Widget currentWidget = current.get(currentArgs);
-    final Direction? direction = widget.direction(_previous, current);
-    final Screen? previous = _previous;
-    bool first = previous != current;
-    if (previous != current) {    // Deactivate and Activate listeners for Screen
-      final HistoryState? previousState = widget.history.previous;
-      if (previousState != null) {
-        previousState.screen.invokeListeners(ScreenState.deactivated, null, previousState.args);
+    final ScreenState state = widget.history.current;
+    final Widget currentWidget = state.screen.get(state);
+    final ScreenState? previous = widget.history.previous;
+    if (previous != state) {
+      // Deactivate and Activate listeners for Screen
+      if (previous != null) {
+        previous.screen
+          .invokeListeners(previous, ScreenStatus.deactivated, null);
       }
-      current.invokeListeners(ScreenState.activated, currentWidget, currentArgs);
+      state.screen
+        .invokeListeners(state, ScreenStatus.activated, currentWidget);
     }
 
-    _previous = current;
-
-    Widget child = currentWidget;
-    if (current.includeSafeArea) {
-      child = SafeArea(child: child);
-    }
-
-    return AnimatedSwitcher(
-      transitionBuilder: (Widget child, Animation<double> animation) {
-        final Widget transition = widget.createTransition(previous, current, direction, first, child, animation);
-        first = false;
-        return transition;
-      },
-      duration: widget.getTransitionDuration(previous, current, direction),
-      child: Container(
-        key: ValueKey<String>('${current.name}:$currentArgs'),
-        child: child,
-      )
-    );
+    return stack;
   }
 
   Widget? bottomNavBar() {
-    final Screen screen = widget.screen;
+    final ScreenState state = widget.history.current;
+    final Screen screen = state.screen;
     final Nav? nav = screen.getNav();
     if (nav == null) {
       return null;
@@ -69,14 +79,17 @@ class ApplicationState extends State<Application> {
           widget.screens.where((s) => s.hasNavBar(bar)).toList(growable: false);
       final List<BottomNavigationBarItem> items = screens
           .map((s) => BottomNavigationBarItem(
-              icon: Icon(s.nav!.icon, size: 30), label: s.nav!.label))
+              label: s.nav!.label,
+              icon: widget.createNavIcon(s.nav!)
+          ))
           .toList(growable: false);
-      return BottomNavigationBar(
-        type: BottomNavigationBarType.fixed,
-        currentIndex: screens.indexOf(navScreen),
-        onTap: (index) => widget.push(screens[index]),
-        items: items
-      );
+      BottomNavigationBar bottomBar = BottomNavigationBar(
+          type: BottomNavigationBarType.fixed,
+          currentIndex: screens.indexOf(navScreen),
+          onTap: (index) => widget.push(screens[index].createState()),
+          items: items);
+
+      return bottomBar;
     }
   }
 }

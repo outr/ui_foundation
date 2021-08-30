@@ -11,6 +11,9 @@ dependencies:
   flutter:
     sdk: flutter
 
+  animations: ^2.0.1
+  badges: ^2.0.1
+
 dev_dependencies:
   flutter_test:
     sdk: flutter
