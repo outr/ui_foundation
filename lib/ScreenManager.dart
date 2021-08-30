@@ -47,10 +47,6 @@ class OnlyActiveScreenManager extends ScreenManager {
 
   @override
   void deactivating(ApplicationState appState, ScreenState state) {
-    appState.stack.keys.forEach((s) {
-      if (s.screen == state.screen) {
-        appState.stack.remove(s);
-      }
-    });
+    appState.stack.remove(state);
   }
 }

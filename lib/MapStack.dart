@@ -56,15 +56,11 @@ class MapStack extends StatefulWidget {
     }
   }
 
-  Widget? remove(ScreenState key) {
+  void remove(ScreenState key) {
     if (_instance != null) {
-      Widget? w;
-      _instance!.setState(() {
-        w = _remove(key);
-      });
-      return w;
+      _remove(key);
     } else {
-      return _remove(key);
+      _remove(key);
     }
   }
 
@@ -73,20 +69,21 @@ class MapStack extends StatefulWidget {
     _widgets.add(widget);
   }
 
-  Widget? _remove(ScreenState key) {
-    int index = _keys.indexOf(key);
-    if (index != -1) {
-      _keys.remove(key);
-      Widget widget = _widgets.removeAt(index);
-      if (_active == key) {
-        if (index > 0) {
-          index--;
+  void _remove(ScreenState key) {
+    WidgetsBinding.instance!.addPostFrameCallback((_) {
+      int index = _keys.indexOf(key);
+      if (index != -1) {
+        _keys.remove(key);
+        if (_active == key) {
+          if (index > 0) {
+            index--;
+            _instance?.index = index;
+          }
+          active = _keys[0];
         }
-        active = _keys[0];
+        _widgets.removeAt(index);
       }
-      return widget;
-    }
-    return null;
+    });
   }
 
   @override

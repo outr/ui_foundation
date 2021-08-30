@@ -15,6 +15,7 @@ final Screen screen0 = Screen(
     onPressed: () => application.pushScreen(screen1),
     child: Text('Begin'),
   ),
+  manager: ScreenManager.onlyActive
 );
 
 final Screen screen1 = Screen(
