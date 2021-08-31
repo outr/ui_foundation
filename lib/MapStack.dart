@@ -1,3 +1,5 @@
+import 'dart:math';
+
 import 'package:animations/animations.dart';
 import 'package:flutter/material.dart';
 
@@ -31,7 +33,17 @@ class MapStack extends StatefulWidget {
 
   ScreenState get active => _active!;
   set active(ScreenState state) {
-    _instance?.index = _keys.indexOf(state);
+    _instance?.setState(() {
+      _active = state;
+    });
+  }
+
+  int get index {
+    int i = 0;
+    if (_active != null) {
+      i = _keys.indexOf(_active!);
+    }
+    return max(i, 0);
   }
 
   void activate(ActiveChange change) {
@@ -45,9 +57,11 @@ class MapStack extends StatefulWidget {
 
   void add(ScreenState key, Widget widget) {
     if (_instance != null) {
-      _instance!.setState(() {
-        _add(key, widget);
-      });
+      // Util.runLater(() {
+        _instance!.setState(() {
+          _add(key, widget);
+        });
+      // });
     } else {
       _add(key, widget);
     }
@@ -57,11 +71,28 @@ class MapStack extends StatefulWidget {
   }
 
   void remove(ScreenState key) {
-    if (_instance != null) {
-      _remove(key);
-    } else {
-      _remove(key);
-    }
+    print('About to remove $key');
+    Util.runLater(() {
+      _instance!.setState(() {
+
+      });
+      /*print('*** Removing $key');
+      int index = _keys.indexOf(key);
+      if (index != -1) {
+        _keys.remove(key);
+        print('Current Index: ${_instance!.index}, Removing: $index');
+        if (_instance!.index >= index) {
+          _instance?.index = max(_instance!.index - 1, 0);
+          print('Updating index to ${index - 1}!');
+        }
+        if (_active == key) {
+          active = _keys[0];
+        }
+        print('Removing at $index...');
+        _widgets.removeAt(index);
+        print('Removed!');
+      }*/
+    });
   }
 
   void _add(ScreenState key, Widget widget) {
@@ -69,37 +100,11 @@ class MapStack extends StatefulWidget {
     _widgets.add(widget);
   }
 
-  void _remove(ScreenState key) {
-    WidgetsBinding.instance!.addPostFrameCallback((_) {
-      int index = _keys.indexOf(key);
-      if (index != -1) {
-        _keys.remove(key);
-        if (_active == key) {
-          if (index > 0) {
-            index--;
-            _instance?.index = index;
-          }
-          active = _keys[0];
-        }
-        _widgets.removeAt(index);
-      }
-    });
-  }
-
   @override
   State createState() => MapStackState();
 }
 
 class MapStackState extends State<MapStack> with TickerProviderStateMixin {
-  int _index = 0;
-
-  int get index => _index;
-  set index(int i) {
-    setState(() {
-      _index = i;
-    });
-  }
-
   @override
   void initState() {
     super.initState();
@@ -110,7 +115,6 @@ class MapStackState extends State<MapStack> with TickerProviderStateMixin {
   @override
   Widget build(BuildContext context) => AnimatedIndexedStack(
       stack: widget,
-      index: _index,
       children: widget._widgets
   );
 }
@@ -118,12 +122,10 @@ class MapStackState extends State<MapStack> with TickerProviderStateMixin {
 // TODO: Remove AnimatedIndexedStack in favor of Stack so we don't have to animate one widget off-screen before animating the one on
 class AnimatedIndexedStack extends StatefulWidget {
   final MapStack stack;
-  final int index;
   final List<Widget> children;
 
   const AnimatedIndexedStack({
     required this.stack,
-    required this.index,
     required this.children,
   });
 
@@ -135,7 +137,6 @@ class _AnimatedIndexedStackState extends State<AnimatedIndexedStack>
     with SingleTickerProviderStateMixin {
   late AnimationController _controller;
   late Animation<double> _animation;
-  late int _index;
 
   @override
   void initState() {
@@ -150,18 +151,23 @@ class _AnimatedIndexedStackState extends State<AnimatedIndexedStack>
       ),
     );
 
-    _index = widget.index;
     _controller.forward();
     super.initState();
   }
 
+  int _lastIndex = 0;
+
   @override
   void didUpdateWidget(AnimatedIndexedStack oldWidget) {
     super.didUpdateWidget(oldWidget);
-    if (widget.index != _index) {
+    int index = widget.stack.index;
+    if (index != _lastIndex) {
       _controller.reverse().then((_) {
-        setState(() => _index = widget.index);
-        _controller.forward();
+        Util.runLater(() {
+          print('Updating index!');
+          setState(() => _lastIndex = index);
+          _controller.forward();
+        });
       });
     }
   }
@@ -174,8 +180,9 @@ class _AnimatedIndexedStackState extends State<AnimatedIndexedStack>
 
   @override
   Widget build(BuildContext context) {
+    print('MapStack build!');
     IndexedStack stack = IndexedStack(
-      index: _index,
+      index: widget.stack.index,
       children: widget.children,
     );
     ActiveChange? change = widget.stack.change;
