@@ -11,7 +11,7 @@ class ApplicationState extends State<Application> with HistoryListener {
   void initState() {
     super.initState();
 
-    stack = MapStack(this);
+    stack = MapStack();
 
     ScreenState initial = widget.history.current;
     stack.add(initial, initial.screen.get(initial));
