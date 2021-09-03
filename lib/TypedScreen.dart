@@ -12,9 +12,16 @@ class TypedScreen<V> extends Screen {
     required this.createTyped,
     Nav? nav,
     Screen? parent,
-    bool? includeSafeArea
+    bool? includeSafeArea,
+    ScreenManager? manager
   }):
-    super(name: name, create: (state) => createTyped(state as TypedScreenState<V>), nav: nav, parent: parent, includeSafeArea: includeSafeArea);
+    super(name: name,
+          create: (state) => createTyped(state as TypedScreenState<V>),
+          nav: nav,
+          parent: parent,
+          includeSafeArea: includeSafeArea,
+          manager: manager
+      );
 
   @override
   ScreenState createState() => createTypedState(defaultValue);
