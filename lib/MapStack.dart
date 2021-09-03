@@ -65,8 +65,14 @@ class MapStack extends StatefulWidget {
   Widget? remove(ScreenState key) {
     int index = _keys.indexOf(key);
     if (index != -1) {
-      _keys.removeAt(index);
-      return _widgets.removeAt(index);
+      // _keys.removeAt(index);
+      // return _widgets.removeAt(index);
+
+      // Stub instead of remove to avoid
+      _keys[index] = ScreenState.stub;
+      Widget removed = _widgets[index];
+      _widgets[index] = SizedBox.shrink();
+      return removed;
     } else {
       return null;
     }

@@ -18,4 +18,14 @@ class ScreenState {
 
   @override
   String toString() => 'ScreenState($screen)';
+
+  static final ScreenState stub = StubScreenState();
+}
+
+class StubScreenState extends ScreenState {
+  StubScreenState():
+    super(Screen(
+        name: "STUB",
+        create: (state) => throw Exception('StubScreenState cannot be used!')
+      ));
 }
