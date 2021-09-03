@@ -23,6 +23,9 @@ class ApplicationState extends State<Application> with HistoryListener {
 
   @override
   void apply(HistoryAction action, ScreenState previous, ScreenState current) {
+    // Hide keyboard
+    FocusScope.of(context).unfocus();
+
     if (!stack.contains(current)) {
       stack.add(current, current.screen.get(current));
     }
