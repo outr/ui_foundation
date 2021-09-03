@@ -22,7 +22,6 @@ class KeepDefaultScreenManager extends ScreenManager {
   @override
   void deactivating(ApplicationState appState, ScreenState state) {
     if (!state.screen.isDefaultState(state)) {
-      print('KeepDefault: Removing $state');
       appState.stack.remove(state);
     }
   }
@@ -33,7 +32,6 @@ class MostRecentScreenManager extends ScreenManager {
   void activating(ApplicationState appState, ScreenState state) {
     appState.stack.keys.forEach((s) {
       if (s.screen == state.screen && s != state) {
-        print('MostRecent: Removing $s');
         appState.stack.remove(s);
       }
     });
@@ -49,7 +47,6 @@ class OnlyActiveScreenManager extends ScreenManager {
 
   @override
   void deactivating(ApplicationState appState, ScreenState state) {
-    print('OnlyActive: Removing $state');
     appState.stack.remove(state);
   }
 }
