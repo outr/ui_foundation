@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:foundation_flutter/MapStack.dart';
-import 'package:badges/badges.dart';
 
 import 'foundation.dart';
 
