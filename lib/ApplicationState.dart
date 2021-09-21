@@ -20,10 +20,12 @@ class ApplicationState extends State<Application> with HistoryListener {
     widget.history.listen(this);
   }
 
+  static final FocusNode _focusNode = FocusNode();
+
   @override
   void apply(HistoryAction action, ScreenState previous, ScreenState current) {
     // Hide keyboard
-    FocusScope.of(context).unfocus();
+    FocusScope.of(context).requestFocus(_focusNode);
 
     if (!stack.contains(current)) {
       stack.add(current, current.screen.get(current));
