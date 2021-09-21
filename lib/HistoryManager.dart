@@ -5,7 +5,9 @@ class HistoryManager {
   final List<HistoryListener> _listeners = [];
 
   HistoryManager(ScreenState initialState):
-        _entries = [initialState];
+    _entries = [initialState] {
+    initialState.screen.activated(HistoryAction.push);
+  }
 
   bool get isTop => _entries.length == 1;
 
@@ -51,6 +53,8 @@ class HistoryManager {
   }
 
   void _invokeListeners(HistoryAction action, ScreenState previous, ScreenState current) {
+    previous.screen.deactivated(action);
+    current.screen.activated(action);
     _listeners.forEach((listener) => listener.apply(action, previous, current));
   }
 }

@@ -9,6 +9,8 @@ class Screen {
   final bool includeSafeArea;
   final ScreenManager manager;
   final Widget Function(ScreenState) create;
+  final void Function(HistoryAction) activated;
+  final void Function(HistoryAction) deactivated;
 
   ScreenState? _state;
   Widget? _cached;
@@ -21,10 +23,16 @@ class Screen {
     this.nav,
     this.parent,
     bool? includeSafeArea,
-    ScreenManager? manager
+    ScreenManager? manager,
+    void Function(HistoryAction)? activated,
+    void Function(HistoryAction)? deactivated,
   }):
     this.includeSafeArea = includeSafeArea ?? true,
-    this.manager = manager ?? ScreenManager.mostRecent;
+    this.manager = manager ?? ScreenManager.mostRecent,
+    this.activated = activated ?? _defaultAction,
+    this.deactivated = deactivated ?? _defaultAction;
+
+  static void _defaultAction(HistoryAction action) {}
 
   ScreenState createState() => ScreenState(this);
 
