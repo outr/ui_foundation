@@ -13,14 +13,18 @@ class TypedScreen<V> extends Screen {
     Nav? nav,
     Screen? parent,
     bool? includeSafeArea,
-    ScreenManager? manager
+    ScreenManager? manager,
+    void Function(HistoryAction)? activated,
+    void Function(HistoryAction)? deactivated,
   }):
     super(name: name,
           create: (state) => createTyped(state as TypedScreenState<V>),
           nav: nav,
           parent: parent,
           includeSafeArea: includeSafeArea,
-          manager: manager
+          manager: manager,
+          activated: activated,
+          deactivated: deactivated
       );
 
   @override
