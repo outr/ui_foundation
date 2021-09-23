@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:foundation_flutter/MapStack.dart';
-import 'package:badges/badges.dart';
 
 import 'foundation.dart';
 
@@ -21,8 +20,13 @@ class ApplicationState extends State<Application> with HistoryListener {
     widget.history.listen(this);
   }
 
+  static final FocusNode _focusNode = FocusNode();
+
   @override
   void apply(HistoryAction action, ScreenState previous, ScreenState current) {
+    // Hide keyboard
+    FocusScope.of(context).requestFocus(_focusNode);
+
     if (!stack.contains(current)) {
       stack.add(current, current.screen.get(current));
     }

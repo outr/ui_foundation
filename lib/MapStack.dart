@@ -1,10 +1,12 @@
+import 'dart:math';
+
 import 'package:animations/animations.dart';
 import 'package:flutter/material.dart';
 
 import 'foundation.dart';
 
 class ActiveChange {
-  final ScreenState previous;
+  final ScreenState? previous;
   final ScreenState current;
   final Direction? direction;
   bool first;
@@ -16,11 +18,10 @@ class ActiveChange {
 }
 
 class MapStack extends StatefulWidget {
-  final List<ScreenState> _keys = [];
-  final List<Widget> _widgets = [];
-
   final ApplicationState appState;
   final Application application;
+  final List<ScreenState> _keys = [];
+  final List<Widget> _widgets = [];
 
   ActiveChange? change;
   ScreenState? _active;
@@ -29,9 +30,24 @@ class MapStack extends StatefulWidget {
   MapStack(this.appState):
     application = appState.widget;
 
-  ScreenState get active => _active!;
+  List<ScreenState> get keys => _keys.toList(growable: false);
+
+  ScreenState get active => _keys[index];
   set active(ScreenState state) {
-    _instance?.index = _keys.indexOf(state);
+    if (!contains(state)) {
+      add(state, state.screen.get(state));
+    }
+    _active = state;
+    _instance?.setState(() {
+    });
+  }
+
+  int get index {
+    if (_active != null) {
+      return max(_keys.indexOf(_active!), 0);
+    } else {
+      return 0;
+    }
   }
 
   void activate(ActiveChange change) {
@@ -39,109 +55,83 @@ class MapStack extends StatefulWidget {
     active = change.current;
   }
 
-  List<ScreenState> get keys => _keys.toList(growable: false);
-
-  bool contains(ScreenState state) => _keys.contains(state);
-
   void add(ScreenState key, Widget widget) {
-    if (_instance != null) {
-      _instance!.setState(() {
-        _add(key, widget);
-      });
+    if (!contains(key)) {
+      _keys.add(key);
+      _widgets.add(widget);
+    }
+  }
+
+  Widget? remove(ScreenState key) {
+    int index = _keys.indexOf(key);
+    if (index != -1) {
+      // _keys.removeAt(index);
+      // return _widgets.removeAt(index);
+
+      // Stub instead of remove to avoid
+      _keys[index] = ScreenState.stub;
+      Widget removed = _widgets[index];
+      _widgets[index] = SizedBox.shrink();
+      return removed;
     } else {
-      _add(key, widget);
-    }
-    if (_active == null) {
-      active = key;
+      return null;
     }
   }
 
-  void remove(ScreenState key) {
-    if (_instance != null) {
-      _remove(key);
-    } else {
-      _remove(key);
-    }
-  }
-
-  void _add(ScreenState key, Widget widget) {
-    _keys.add(key);
-    _widgets.add(widget);
-  }
-
-  void _remove(ScreenState key) {
-    WidgetsBinding.instance!.addPostFrameCallback((_) {
-      int index = _keys.indexOf(key);
-      if (index != -1) {
-        _keys.remove(key);
-        if (_active == key) {
-          if (index > 0) {
-            index--;
-            _instance?.index = index;
-          }
-          active = _keys[0];
-        }
-        _widgets.removeAt(index);
-      }
-    });
-  }
+  bool contains(ScreenState key) => _keys.contains(key);
 
   @override
   State createState() => MapStackState();
 }
 
-class MapStackState extends State<MapStack> with TickerProviderStateMixin {
-  int _index = 0;
-
-  int get index => _index;
-  set index(int i) {
-    setState(() {
-      _index = i;
-    });
-  }
-
+class MapStackState extends State<MapStack> with SingleTickerProviderStateMixin {
   @override
   void initState() {
-    super.initState();
-
     widget._instance = this;
   }
 
   @override
   Widget build(BuildContext context) => AnimatedIndexedStack(
-      stack: widget,
-      index: _index,
-      children: widget._widgets
+    stack: widget,
+    change: widget.change,
+    index: widget.index,
+    children: widget._widgets.toList(growable: false)
   );
 }
 
-// TODO: Remove AnimatedIndexedStack in favor of Stack so we don't have to animate one widget off-screen before animating the one on
 class AnimatedIndexedStack extends StatefulWidget {
   final MapStack stack;
+  final ActiveChange? change;
   final int index;
   final List<Widget> children;
 
   const AnimatedIndexedStack({
+    Key? key,
     required this.stack,
+    required this.change,
     required this.index,
     required this.children,
-  });
+  }) : super(key: key);
 
   @override
   _AnimatedIndexedStackState createState() => _AnimatedIndexedStackState();
 }
 
-class _AnimatedIndexedStackState extends State<AnimatedIndexedStack>
-    with SingleTickerProviderStateMixin {
-  late AnimationController _controller;
-  late Animation<double> _animation;
-  late int _index;
+class _AnimatedIndexedStackState extends State<AnimatedIndexedStack> with SingleTickerProviderStateMixin {
+  late final AnimationController _controller;
+  late final Animation<double> _animation;
+  int _index = 0;
 
   @override
   void initState() {
+    ActiveChange? change = widget.change;
     _controller = AnimationController(
       vsync: this,
-      duration: Duration(milliseconds: 200),
+      duration: widget.stack.application.getTransitionDuration(
+        change?.previous?.screen,
+        change?.current.screen ?? widget.stack.application.history.current.screen,
+        change?.direction
+      ),
     );
     _animation = Tween(begin: 0.0, end: 1.0).animate(
       CurvedAnimation(
@@ -176,22 +166,29 @@ class _AnimatedIndexedStackState extends State<AnimatedIndexedStack>
   Widget build(BuildContext context) {
     IndexedStack stack = IndexedStack(
       index: _index,
-      children: widget.children,
+      children: widget.children
     );
-    ActiveChange? change = widget.stack.change;
+
+    ActiveChange? change = widget.change;
     bool first = change?.first ?? true;
     change?.first = false;
+    // TODO: support changing duration based on the transition
+    // _controller.duration = widget.stack.application.getTransitionDuration(
+    //     change?.previous?.screen,
+    //     change?.current.screen ?? widget.stack.application.history.current.screen,
+    //     change?.direction
+    // );
     Widget transition = widget.stack.application.createTransition(
-        change?.previous.screen,
-        change?.current.screen ?? widget.stack.application.history.current.screen,
-        change?.direction,
-        first,
-        stack,
-        _animation
+      change?.previous?.screen,
+      change?.current.screen ?? widget.stack.application.history.current.screen,
+      change?.direction,
+      first,
+      stack,
+      _animation
     );
     if (!first) {
       // Deactivate the previous screen
-      change?.previous.screen.manager.deactivating(widget.stack.appState, change.previous);
+      change?.previous?.screen.manager.deactivating(widget.stack.appState, change.previous!);
     }
     return transition;
   }
