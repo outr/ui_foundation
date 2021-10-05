@@ -22,14 +22,12 @@ class ApplicationState extends State<Application> with HistoryListener {
 
   static final FocusNode _focusNode = FocusNode();
 
+  void hideKeyboard() => FocusScope.of(context).requestFocus(_focusNode);
+
   @override
   void apply(HistoryAction action, ScreenState previous, ScreenState current) {
     // Hide keyboard
-    FocusScopeNode currentFocus = FocusScope.of(context);
-    if (!currentFocus.hasPrimaryFocus) {
-      currentFocus.unfocus();
-    }
-    FocusScope.of(context).requestFocus(_focusNode);
+    hideKeyboard();
 
     if (!stack.contains(current)) {
       stack.add(current, current.screen.get(current));

@@ -12,6 +12,7 @@ export 'MapStack.dart';
 export 'Nav.dart';
 export 'NavBar.dart';
 export 'Screen.dart';
+export 'ScreenFocusWidget.dart';
 export 'ScreenListener.dart';
 export 'ScreenManager.dart';
 export 'ScreenState.dart';

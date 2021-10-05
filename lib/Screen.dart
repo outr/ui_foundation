@@ -32,6 +32,8 @@ class Screen {
     this.activated = activated ?? _defaultAction,
     this.deactivated = deactivated ?? _defaultAction;
 
+  bool active = false;
+
   static void _defaultAction(HistoryAction action) {}
 
   ScreenState createState() => ScreenState(this);
@@ -44,8 +46,9 @@ class Screen {
     } else {
       Widget widget = create(state);
       if (includeSafeArea) {
-        widget = new SafeArea(child: widget);
+        widget = SafeArea(child: widget);
       }
+      widget = ScreenFocusWidget(this, widget);
       _cached = widget;
       _state = state;
       return widget;

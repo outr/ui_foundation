@@ -6,6 +6,7 @@ class HistoryManager {
 
   HistoryManager(ScreenState initialState):
     _entries = [initialState] {
+    initialState.screen.active = true;
     initialState.screen.activated(HistoryAction.push);
   }
 
@@ -53,6 +54,9 @@ class HistoryManager {
   }
 
   void _invokeListeners(HistoryAction action, ScreenState previous, ScreenState current) {
+    previous.screen.active = false;
+    current.screen.active = true;
+
     previous.screen.deactivated(action);
     current.screen.activated(action);
     _listeners.forEach((listener) => listener.apply(action, previous, current));
