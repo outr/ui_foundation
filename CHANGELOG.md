@@ -23,3 +23,8 @@
 ## [0.1.2]
 - Faster animations by defaults
 - Support for per-screen `includeSafeArea`
+
+## [0.2.0]
+- Lots of internal changes to improve screen changes
+- Bug fixes for keyboard improperly showing
+- Miscellaneous improvements with some breaking changes
