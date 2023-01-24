@@ -1,4 +1,4 @@
-import 'package:foundation_flutter/foundation.dart';
+import 'package:ui_foundation/foundation.dart';
 
 void main() {
 }

@@ -3,7 +3,7 @@ import UIKit
 
 public class SwiftFoundationFlutterPlugin: NSObject, FlutterPlugin {
   public static func register(with registrar: FlutterPluginRegistrar) {
-    let channel = FlutterMethodChannel(name: "foundation_flutter", binaryMessenger: registrar.messenger())
+    let channel = FlutterMethodChannel(name: "ui_foundation", binaryMessenger: registrar.messenger())
     let instance = SwiftFoundationFlutterPlugin()
     registrar.addMethodCallDelegate(instance, channel: channel)
   }

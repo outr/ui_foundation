@@ -28,3 +28,6 @@
 - Lots of internal changes to improve screen changes
 - Bug fixes for keyboard improperly showing
 - Miscellaneous improvements with some breaking changes
+
+## [0.3.0]
+- Added support for TypedScreen to define a defaultValue as a function

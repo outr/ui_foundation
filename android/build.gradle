@@ -1,4 +1,4 @@
-group 'com.example.foundation_flutter'
+group 'com.example.ui_foundation'
 version '1.0-SNAPSHOT'
 
 buildscript {

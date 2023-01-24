@@ -1,6 +1,6 @@
-# foundation_flutter_example
+# ui_foundation_example
 
-Demonstrates how to use the foundation_flutter plugin.
+Demonstrates how to use the ui_foundation plugin.
 
 ## Getting Started
 

@@ -1,4 +1,4 @@
-package com.example.foundation_flutter
+package com.example.ui_foundation
 
 import androidx.annotation.NonNull
 
@@ -17,7 +17,7 @@ class FoundationFlutterPlugin: FlutterPlugin, MethodCallHandler {
   private lateinit var channel : MethodChannel
 
   override fun onAttachedToEngine(@NonNull flutterPluginBinding: FlutterPlugin.FlutterPluginBinding) {
-    channel = MethodChannel(flutterPluginBinding.binaryMessenger, "foundation_flutter")
+    channel = MethodChannel(flutterPluginBinding.binaryMessenger, "ui_foundation")
     channel.setMethodCallHandler(this)
   }
 

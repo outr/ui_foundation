@@ -1,4 +1,4 @@
-#include "include/foundation_flutter/foundation_flutter_plugin.h"
+#include "include/ui_foundation/ui_foundation_plugin.h"
 
 #include <flutter_linux/flutter_linux.h>
 #include <gtk/gtk.h>
@@ -6,18 +6,18 @@
 
 #include <cstring>
 
-#define FOUNDATION_FLUTTER_PLUGIN(obj) \
-  (G_TYPE_CHECK_INSTANCE_CAST((obj), foundation_flutter_plugin_get_type(), \
+#define ui_foundation_PLUGIN(obj) \
+  (G_TYPE_CHECK_INSTANCE_CAST((obj), ui_foundation_plugin_get_type(), \
                               FoundationFlutterPlugin))
 
 struct _FoundationFlutterPlugin {
   GObject parent_instance;
 };
 
-G_DEFINE_TYPE(FoundationFlutterPlugin, foundation_flutter_plugin, g_object_get_type())
+G_DEFINE_TYPE(FoundationFlutterPlugin, ui_foundation_plugin, g_object_get_type())
 
 // Called when a method call is received from Flutter.
-static void foundation_flutter_plugin_handle_method_call(
+static void ui_foundation_plugin_handle_method_call(
     FoundationFlutterPlugin* self,
     FlMethodCall* method_call) {
   g_autoptr(FlMethodResponse) response = nullptr;
@@ -37,30 +37,30 @@ static void foundation_flutter_plugin_handle_method_call(
   fl_method_call_respond(method_call, response, nullptr);
 }
 
-static void foundation_flutter_plugin_dispose(GObject* object) {
-  G_OBJECT_CLASS(foundation_flutter_plugin_parent_class)->dispose(object);
+static void ui_foundation_plugin_dispose(GObject* object) {
+  G_OBJECT_CLASS(ui_foundation_plugin_parent_class)->dispose(object);
 }
 
-static void foundation_flutter_plugin_class_init(FoundationFlutterPluginClass* klass) {
-  G_OBJECT_CLASS(klass)->dispose = foundation_flutter_plugin_dispose;
+static void ui_foundation_plugin_class_init(FoundationFlutterPluginClass* klass) {
+  G_OBJECT_CLASS(klass)->dispose = ui_foundation_plugin_dispose;
 }
 
-static void foundation_flutter_plugin_init(FoundationFlutterPlugin* self) {}
+static void ui_foundation_plugin_init(FoundationFlutterPlugin* self) {}
 
 static void method_call_cb(FlMethodChannel* channel, FlMethodCall* method_call,
                            gpointer user_data) {
-  FoundationFlutterPlugin* plugin = FOUNDATION_FLUTTER_PLUGIN(user_data);
-  foundation_flutter_plugin_handle_method_call(plugin, method_call);
+  FoundationFlutterPlugin* plugin = ui_foundation_PLUGIN(user_data);
+  ui_foundation_plugin_handle_method_call(plugin, method_call);
 }
 
-void foundation_flutter_plugin_register_with_registrar(FlPluginRegistrar* registrar) {
-  FoundationFlutterPlugin* plugin = FOUNDATION_FLUTTER_PLUGIN(
-      g_object_new(foundation_flutter_plugin_get_type(), nullptr));
+void ui_foundation_plugin_register_with_registrar(FlPluginRegistrar* registrar) {
+  FoundationFlutterPlugin* plugin = ui_foundation_PLUGIN(
+      g_object_new(ui_foundation_plugin_get_type(), nullptr));
 
   g_autoptr(FlStandardMethodCodec) codec = fl_standard_method_codec_new();
   g_autoptr(FlMethodChannel) channel =
       fl_method_channel_new(fl_plugin_registrar_get_messenger(registrar),
-                            "foundation_flutter",
+                            "ui_foundation",
                             FL_METHOD_CODEC(codec));
   fl_method_channel_set_method_call_handler(channel, method_call_cb,
                                             g_object_ref(plugin),

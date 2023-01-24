@@ -1,4 +1,4 @@
-# foundation_flutter
+# ui_foundation
 
 A new Flutter package project.
 
