@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import 'foundation.dart';
 
 class TypedScreen<V> extends Screen {
-  final V defaultValue;
+  final V Function() defaultValue;
   final Widget Function(TypedScreenState<V>) createTyped;
 
   TypedScreen({
@@ -17,7 +17,7 @@ class TypedScreen<V> extends Screen {
     void Function(HistoryAction)? activated,
     void Function(HistoryAction)? deactivated,
   }):
-    super(name: name,
+        super(name: name,
           create: (state) => createTyped(state as TypedScreenState<V>),
           nav: nav,
           parent: parent,
@@ -28,11 +28,11 @@ class TypedScreen<V> extends Screen {
       );
 
   @override
-  ScreenState createState() => createTypedState(defaultValue);
+  ScreenState createState() => createTypedState(defaultValue());
 
   @override
   bool isDefaultState(ScreenState state) {
-    if (state is TypedScreenState && state.value == defaultValue) {
+    if (state is TypedScreenState && state.value == defaultValue()) {
       return true;
     } else {
       return false;
