@@ -1,6 +1,6 @@
 import 'dart:collection';
 
-import 'package:badges/badges.dart';
+import 'package:badges/badges.dart' as badges;
 import 'package:flutter/material.dart';
 
 import 'foundation.dart';
@@ -89,10 +89,12 @@ class Application<S, T extends AbstractTheme> extends StatefulWidget {
     if (value == 0) {
       return icon;
     } else {
-      return Badge(
+      return badges.Badge(
         child: icon,
-        shape: BadgeShape.circle,
-        borderRadius: BorderRadius.circular(100),
+        badgeStyle: badges.BadgeStyle(
+          shape: badges.BadgeShape.circle,
+          borderRadius: BorderRadius.circular(100),
+        ),
         badgeContent: Text("$value", style: TextStyle(color: Colors.white)),
       );
     }

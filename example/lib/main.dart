@@ -33,7 +33,7 @@ final Screen screen2 = Screen(
 );
 final TypedScreen<PageThreeData> screen3 = TypedScreen(
   name: "Page 3",
-  defaultValue: PageThreeData('Default!'),
+  defaultValue: () => PageThreeData('Default!'),
   nav: Nav('Page 3', Icons.nature, navBar),
   createTyped: (state) => PageThree(data: state.value),
 );
